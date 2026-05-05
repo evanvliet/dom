@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Dominoes"/>
+<title>Dominoes Scorer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --color-background-primary:#ffffff;
+  --color-background-secondary:#f2f2f7;
+  --color-background-tertiary:#e5e5ea;
+  --color-text-primary:#1c1c1e;
+  --color-text-secondary:#6e6e73;
+  --color-text-tertiary:#aeaeb2;
+  --color-border-tertiary:#d1d1d6;
+  --color-border-secondary:#c7c7cc;
+  --border-radius-lg:14px;
+  --border-radius-md:10px;
+  --font-sans:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --color-background-primary:#1c1c1e;
+    --color-background-secondary:#2c2c2e;
+    --color-background-tertiary:#3a3a3c;
+    --color-text-primary:#ffffff;
+    --color-text-secondary:#aeaeb2;
+    --color-text-tertiary:#636366;
+    --color-border-tertiary:#3a3a3c;
+    --color-border-secondary:#48484a;
+  }
+}
+html,body{height:100%;background:var(--color-background-tertiary);font-family:var(--font-sans);}
+.app{max-width:430px;margin:0 auto;display:flex;flex-direction:column;height:100%;height:100dvh;}
+.tab-content{flex:1;overflow-y:auto;padding:12px 12px 4px;-webkit-overflow-scrolling:touch;}
+.tabbar{
+  display:flex;
+  background:var(--color-background-primary);
+  border-top:0.5px solid var(--color-border-tertiary);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.tbtab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--color-text-secondary);cursor:pointer;padding:8px 0 4px;}
+.tbtab.active{color:#1D9E75;}
+.tbtab svg{width:22px;height:22px;}
+
+/* numpad */
+.numpad-wrap{background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);padding:10px;margin-bottom:10px;}
+.display-bar{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px 14px;text-align:right;font-size:32px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px;min-height:52px;letter-spacing:2px;}
+.display-bar.dim{color:var(--color-text-tertiary);}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.key{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);font-size:22px;font-weight:400;color:var(--color-text-primary);padding:14px 0;text-align:center;cursor:pointer;user-select:none;transition:background 0.1s,transform 0.08s;}
+.key:active{background:var(--color-border-tertiary);transform:scale(0.95);}
+.key.del{font-size:16px;color:var(--color-text-secondary);}
+.domino-btn{width:100%;margin-top:7px;background:#1D9E75;color:#fff;border:none;border-radius:var(--border-radius-md);padding:13px 0;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:600;transition:background 0.15s,transform 0.1s;}
+.domino-btn:active{background:#0F6E56;transform:scale(0.98);}
+.domino-btn.gameover{background:#D85A30;}
+.domino-btn.gameover:active{background:#b04020;}
+.domino-btn.disabled{background:var(--color-background-secondary);color:var(--color-text-tertiary);pointer-events:none;}
+
+/* scorecards */
+.scoreboard{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.scard{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px 10px 10px;text-align:center;cursor:pointer;position:relative;transition:border-color 0.2s,box-shadow 0.2s;user-select:none;}
+.scard:active{transform:scale(0.97);}
+.scard.goes-first{border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,0.15);}
+.scard.pending-setup{border:2px dashed #9FE1CB;}
+.scard .pname{font-size:13px;color:var(--color-text-secondary);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.score-pair{display:flex;align-items:baseline;justify-content:center;}
+.score-hand{font-size:24px;font-weight:500;color:#1D9E75;line-height:1;}
+.score-slash{font-size:22px;font-weight:300;color:var(--color-text-tertiary);margin:0 3px;line-height:1;}
+.score-total{font-size:32px;font-weight:500;color:var(--color-text-primary);line-height:1;}
+.score-labels{display:flex;justify-content:center;margin-top:2px;}
+.score-lbl-hand{font-size:9px;color:#1D9E75;width:28px;text-align:right;}
+.score-lbl-sep{font-size:9px;color:transparent;margin:0 3px;}
+.score-lbl-tot{font-size:9px;color:var(--color-text-tertiary);width:28px;text-align:left;}
+.scard .lastadd{font-size:12px;color:#1D9E75;min-height:16px;margin-top:4px;}
+
+.setup-hint{background:#E1F5EE;border:0.5px solid #9FE1CB;border-radius:var(--border-radius-md);padding:9px 14px;font-size:13px;color:#0F6E56;text-align:center;margin-bottom:10px;line-height:1.6;}
+
+/* history */
+.hist-table{width:100%;border-collapse:collapse;font-size:13px;}
+.hist-table th{text-align:left;padding:6px 7px;color:var(--color-text-secondary);font-weight:500;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;}
+.hist-table td{padding:7px 7px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:middle;}
+.hist-table tr.domino-row td{background:var(--color-background-secondary);color:#0F6E56;font-style:italic;font-size:12px;}
+.hist-table tr.gameover-row td{background:#E1F5EE;color:#0F6E56;font-weight:600;font-size:12px;}
+.del-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:2px 7px;border-radius:4px;color:#D85A30;}
+.del-btn:active{opacity:0.6;}
+.pts-display{color:#1D9E75;font-weight:500;cursor:pointer;border-bottom:1px dashed #9FE1CB;display:inline-block;}
+.pts-input{width:54px;font-size:13px;font-weight:500;color:#1D9E75;border:1.5px solid #1D9E75;border-radius:5px;padding:2px 5px;background:var(--color-background-primary);color:#1D9E75;outline:none;font-family:inherit;}
+
+/* options */
+.opt-section{background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);padding:12px 14px;margin-bottom:12px;}
+.opt-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+.opt-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.opt-row:last-child{margin-bottom:0;}
+.opt-row label{font-size:14px;color:var(--color-text-secondary);width:80px;flex-shrink:0;}
+.opt-row input[type=text]{flex:1;font-size:15px;font-weight:500;padding:7px 10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:inherit;}
+.opt-row input[type=number]{width:90px;font-size:15px;padding:7px 10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:inherit;}
+.action-btn{width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);font-size:14px;color:var(--color-text-primary);padding:11px;cursor:pointer;text-align:center;margin-bottom:9px;display:block;font-family:inherit;}
+.action-btn:last-child{margin-bottom:0;}
+.action-btn:active{background:var(--color-border-tertiary);}
+.action-btn.danger{color:#D85A30;}
+.save-status{font-size:12px;color:var(--color-text-tertiary);text-align:center;margin-top:8px;}
+.copy-status{font-size:12px;color:#1D9E75;text-align:center;margin-top:6px;min-height:18px;}
+textarea.export-area{width:100%;height:130px;font-size:11px;font-family:monospace;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px;background:var(--color-background-secondary);color:var(--color-text-secondary);resize:none;margin-top:8px;-webkit-user-select:text;user-select:text;}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+const SK='dom_v9';
+const S={
+  names:['Peter','Eric'],
+  scores:[0,0],
+  handScores:[0,0],
+  display:'',
+  records:[],
+  target:50,
+  gameOver:false,
+  tab:0,
+  phase:'setup',
+  firstPlayer:-1,
+  handFirstPlayer:-1,
+  handNum:0,
+  firstPlayerHighlightUntil:0,
+  lastAdded:['',''],
+  pendingWin:false,
+  editingIdx:-1
+};
+
+function load(){
+  try{
+    const r=localStorage.getItem(SK);
+    if(!r)return;
+    const d=JSON.parse(r);
+    S.names=d.names||['Peter','Eric'];
+    S.scores=d.scores||[0,0];
+    S.handScores=d.handScores||[0,0];
+    S.records=d.records||[];
+    S.target=d.target!=null?d.target:50;
+    S.gameOver=!!d.gameOver;
+    S.tab=d.tab||0;
+    S.phase=d.phase||'setup';
+    S.firstPlayer=d.firstPlayer!=null?d.firstPlayer:-1;
+    S.handFirstPlayer=d.handFirstPlayer!=null?d.handFirstPlayer:-1;
+    S.handNum=d.handNum||0;
+    S.lastAdded=d.lastAdded||['',''];
+    S.pendingWin=!!d.pendingWin;
+    S.display='';S.editingIdx=-1;
+  }catch(e){}
+}
+
+function save(){
+  try{
+    localStorage.setItem(SK,JSON.stringify({
+      names:S.names,scores:S.scores,handScores:S.handScores,
+      records:S.records,target:S.target,gameOver:S.gameOver,
+      tab:S.tab,phase:S.phase,firstPlayer:S.firstPlayer,
+      handFirstPlayer:S.handFirstPlayer,handNum:S.handNum,
+      lastAdded:S.lastAdded,pendingWin:S.pendingWin
+    }));
+  }catch(e){}
+}
+
+function ts(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+
+function domTile(){
+  return `<svg width="34" height="22" viewBox="0 0 34 22" style="flex-shrink:0">
+    <rect x="1" y="1" width="32" height="20" rx="4" fill="#111" stroke="#fff" stroke-width="1.5"/>
+    <line x1="17" y1="3" x2="17" y2="19" stroke="#fff" stroke-width="1"/>
+    <circle cx="9" cy="7" r="2" fill="#fff"/>
+    <circle cx="9" cy="15" r="2" fill="#fff"/>
+    <circle cx="25" cy="6" r="2" fill="#fff"/>
+    <circle cx="25" cy="11" r="2" fill="#fff"/>
+    <circle cx="25" cy="16" r="2" fill="#fff"/>
+  </svg>`;
+}
+
+function pressKey(v){
+  if(S.gameOver||S.phase==='setup')return;
+  if(S.display.length>=3)return;
+  S.display+=v;
+  const el=document.getElementById('display-bar');
+  if(el){el.textContent=S.display;el.className='display-bar';}
+}
+
+function delKey(){
+  S.display=S.display.slice(0,-1);
+  const el=document.getElementById('display-bar');
+  if(el){el.textContent=S.display||'0';el.className='display-bar'+(S.display?'':' dim');}
+}
+
+function tapPlayer(i){
+  if(S.gameOver)return;
+  if(S.phase==='setup'){
+    const pts=parseInt(S.display)||0;
+    S.firstPlayer=i;S.handFirstPlayer=i;S.handNum=1;
+    if(pts>0){
+      S.scores[i]+=pts;S.handScores[i]+=pts;
+      S.lastAdded=['',''];S.lastAdded[i]='+'+pts;
+      S.records.push({who:i,pts,time:ts(),type:'score',hand:1,totalAfter:[S.scores[0],S.scores[1]]});
+      if(S.scores[i]>=S.target)S.pendingWin=true;
+    }
+    S.display='';S.phase='play';
+    save();render();return;
+  }
+  const pts=parseInt(S.display)||0;
+  if(pts<=0){
+    S.display='';
+    const el=document.getElementById('display-bar');
+    if(el){el.textContent='0';el.className='display-bar dim';}
+    return;
+  }
+  S.scores[i]+=pts;S.handScores[i]+=pts;
+  S.lastAdded=['',''];S.lastAdded[i]='+'+pts;
+  S.records.push({who:i,pts,time:ts(),type:'score',hand:S.handNum,totalAfter:[S.scores[0],S.scores[1]]});
+  if(S.scores[i]>=S.target)S.pendingWin=true;
+  S.display='';
+  save();render();
+}
+
+function callDomino(){
+  if(S.phase!=='play'||S.gameOver)return;
+  const gameEnds=S.pendingWin;
+  S.records.push({
+    who:-1,pts:0,time:ts(),type:'domino',hand:S.handNum,
+    totalAfter:[S.scores[0],S.scores[1]],
+    handTotals:[S.handScores[0],S.handScores[1]],
+    gameEnds
+  });
+  if(gameEnds){
+    const wi=S.scores[0]>=S.target?0:1;
+    S.records.push({who:-1,pts:0,time:ts(),type:'gameover',
+      finalScores:[S.scores[0],S.scores[1]],winnerIdx:wi,winnerName:S.names[wi]});
+    S.scores=[0,0];S.handScores=[0,0];S.pendingWin=false;
+    S.handFirstPlayer=S.handFirstPlayer===0?1:0;
+    S.firstPlayer=S.handFirstPlayer;S.handNum++;
+    S.lastAdded=['',''];S.display='';
+    S.firstPlayerHighlightUntil=Date.now()+10000;
+    setTimeout(()=>{if(Date.now()>=S.firstPlayerHighlightUntil){S.firstPlayerHighlightUntil=0;render();}},10000);
+    save();render();return;
+  }
+  S.handScores=[0,0];S.lastAdded=['',''];S.pendingWin=false;
+  S.handFirstPlayer=S.handFirstPlayer===0?1:0;
+  S.firstPlayer=S.handFirstPlayer;S.handNum++;
+  S.firstPlayerHighlightUntil=Date.now()+10000;
+  setTimeout(()=>{if(Date.now()>=S.firstPlayerHighlightUntil){S.firstPlayerHighlightUntil=0;render();}},10000);
+  S.display='';save();render();
+}
+
+function recalcTotals(){
+  const running=[0,0];
+  for(const rec of S.records){
+    if(rec.type==='score'){
+      running[rec.who]+=rec.pts;
+      rec.totalAfter=[running[0],running[1]];
+    } else if(rec.type==='domino'){
+      rec.totalAfter=[running[0],running[1]];
+      if(rec.gameEnds){running[0]=0;running[1]=0;}
+    } else if(rec.type==='gameover'){
+      rec.finalScores=[running[0],running[1]];
+      running[0]=0;running[1]=0;
+    }
+  }
+  S.scores=[running[0],running[1]];
+  S.pendingWin=S.scores[0]>=S.target||S.scores[1]>=S.target;
+}
+
+function deleteRecord(idx){
+  S.records.splice(idx,1);
+  recalcTotals();S.gameOver=false;S.pendingWin=false;
+  save();render();
+}
+
+function startEdit(idx){
+  S.editingIdx=idx;
+  render();
+  setTimeout(()=>{
+    const inp=document.getElementById('edit-input-'+idx);
+    if(inp){inp.focus();inp.select();}
+  },50);
+}
+
+function commitEdit(idx){
+  const inp=document.getElementById('edit-input-'+idx);
+  if(!inp)return;
+  const newPts=parseInt(inp.value);
+  if(!isNaN(newPts)&&newPts>=0){
+    S.records[idx].pts=newPts;
+    recalcTotals();
+  }
+  S.editingIdx=-1;
+  save();render();
+}
+
+function cancelEdit(){S.editingIdx=-1;render();}
+
+function getExportJSON(){
+  return JSON.stringify({
+    names:S.names,scores:S.scores,handScores:S.handScores,
+    records:S.records,target:S.target,handNum:S.handNum,
+    phase:S.phase,firstPlayer:S.firstPlayer,
+    handFirstPlayer:S.handFirstPlayer,
+    exportedAt:new Date().toISOString()
+  },null,2);
+}
+
+function copyExport(){
+  const data=getExportJSON();
+  const statusEl=document.getElementById('copy-status');
+  const taEl=document.getElementById('export-textarea');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(data).then(()=>{
+      if(statusEl)statusEl.textContent='✓ Copied to clipboard!';
+      setTimeout(()=>{if(statusEl)statusEl.textContent='';},2500);
+    }).catch(()=>{
+      if(taEl){taEl.style.display='block';taEl.value=data;taEl.focus();taEl.select();}
+    });
+  } else {
+    if(taEl){taEl.style.display='block';taEl.value=data;taEl.focus();taEl.select();}
+  }
+}
+
+function doImport(){
+  const ta=document.getElementById('import-textarea');
+  if(!ta||!ta.value.trim())return;
+  try{
+    const d=JSON.parse(ta.value);
+    if(!d.records||!d.names){alert('Invalid data');return;}
+    S.names=d.names;S.scores=d.scores||[0,0];S.handScores=d.handScores||[0,0];
+    S.records=d.records;S.target=d.target!=null?d.target:50;
+    S.phase=d.phase||'play';S.firstPlayer=d.firstPlayer!=null?d.firstPlayer:-1;
+    S.handFirstPlayer=d.handFirstPlayer!=null?d.handFirstPlayer:-1;
+    S.handNum=d.handNum||0;S.display='';S.gameOver=false;S.tab=0;
+    S.lastAdded=['',''];S.pendingWin=false;S.editingIdx=-1;
+    save();render();
+  }catch(err){alert('Could not parse JSON — check the data and try again.');}
+}
+
+function newGame(){
+  if(!confirm('Reset everything and start a new game?'))return;
+  S.scores=[0,0];S.handScores=[0,0];S.display='';S.records=[];
+  S.gameOver=false;S.pendingWin=false;S.phase='setup';
+  S.firstPlayer=-1;S.handFirstPlayer=-1;
+  S.handNum=0;S.firstPlayerHighlightUntil=0;S.lastAdded=['',''];S.editingIdx=-1;S.tab=0;
+  save();render();
+}
+
+function initNameInputs(){
+  [0,1].forEach(i=>{
+    const el=document.getElementById('name-input-'+i);
+    if(!el)return;
+    el.addEventListener('blur',()=>{S.names[i]=el.value.trim()||'Player '+(i+1);save();});
+  });
+}
+
+function setTab(t){S.editingIdx=-1;S.tab=t;render();}
+
+function render(){
+  const tabIcons=[
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>`,
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`
+  ];
+  const tabNames=['Score','History','Options'];
+  const tabbar=tabNames.map((n,i)=>`<div class="tbtab ${S.tab===i?'active':''}" onclick="setTab(${i})">${tabIcons[i]}<span>${n}</span></div>`).join('');
+
+  let content='';
+
+  if(S.tab===0){
+    const isSetup=S.phase==='setup';
+    const dominoDisabled=isSetup||S.gameOver;
+    const btnClass=dominoDisabled?'disabled':S.pendingWin?'gameover':'';
+    const btnLabel=S.pendingWin&&!dominoDisabled?'Game Over':'Domino';
+
+    const firstHighlight=Date.now() < S.firstPlayerHighlightUntil;
+    const cards=[0,1].map(i=>`
+      <div class="scard ${isSetup?'pending-setup':firstHighlight&&S.firstPlayer===i?'goes-first':''}" onclick="tapPlayer(${i})">
+        <div class="pname">${S.names[i]}</div>
+        <div class="score-pair">
+          <span class="score-hand">${S.handScores[i]}</span>
+          <span class="score-slash">/</span>
+          <span class="score-total">${S.scores[i]}</span>
+        </div>
+        <div class="score-labels">
+          <span class="score-lbl-hand">hand</span>
+          <span class="score-lbl-sep">/</span>
+          <span class="score-lbl-tot">total</span>
+        </div>
+        <div class="lastadd">${S.lastAdded[i]||''}</div>
+      </div>`).join('');
+
+    content=`
+      <div class="numpad-wrap">
+        <div id="display-bar" class="display-bar${S.display?'':' dim'}">${S.display||'0'}</div>
+        <div class="keypad">
+          ${[1,2,3,4,5,6,7,8,9].map(n=>`<div class="key" onclick="pressKey('${n}')">${n}</div>`).join('')}
+          <div class="key del" onclick="delKey()">&#9003;</div>
+          <div class="key" onclick="pressKey('0')">0</div>
+          <div class="key" style="background:var(--color-background-secondary);"></div>
+        </div>
+        <button class="domino-btn ${btnClass}" onclick="callDomino()">
+          ${domTile()} ${btnLabel}
+        </button>
+      </div>
+      ${isSetup?`<div class="setup-hint">Tap the player with highest double.</div>`:''}
+      <div class="scoreboard">${cards}</div>
+    `;
+
+  } else if(S.tab===1){
+    const dominoIndices=[];
+    for(let i=0;i<S.records.length;i++){
+      if(S.records[i].type==='domino')dominoIndices.push(i);
+    }
+    const rows=dominoIndices.length===0
+      ?`<tr><td colspan="4" style="text-align:center;color:var(--color-text-tertiary);padding:24px 0">No domino history yet</td></tr>`
+      :dominoIndices.slice().reverse().map(idx=>{
+          const rec=S.records[idx];
+          const leftGain=(rec.handTotals&&rec.handTotals[0]!=null)?rec.handTotals[0]:0;
+          const rightGain=(rec.handTotals&&rec.handTotals[1]!=null)?rec.handTotals[1]:0;
+          return `<tr class="domino-row">
+            <td style="font-size:10px;white-space:nowrap">${rec.time}</td>
+            <td>${rec.totalAfter[0]} (${leftGain})</td>
+            <td>${rec.totalAfter[1]} (${rightGain})</td>
+            <td><button class="del-btn" onclick="deleteRecord(${idx})">&#10005;</button></td>
+          </tr>`;
+        }).join('');
+
+    content=`<table class="hist-table">
+      <thead><tr><th>Time</th><th>${S.names[0]}</th><th>${S.names[1]}</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  } else {
+    content=`
+      <div class="opt-section">
+        <div class="opt-label">Player names</div>
+        <div class="opt-row"><label>Peter</label><input id="name-input-0" type="text" value="${S.names[0]}" maxlength="14" placeholder="Peter" autocomplete="off" autocorrect="off" spellcheck="false"/></div>
+        <div class="opt-row"><label>Eric</label><input id="name-input-1" type="text" value="${S.names[1]}" maxlength="14" placeholder="Eric" autocomplete="off" autocorrect="off" spellcheck="false"/></div>
+      </div>
+      <div class="opt-section">
+        <div class="opt-label">Game settings</div>
+        <div class="opt-row"><label>Target score</label><input type="number" value="${S.target}" min="25" max="500" step="25" onchange="S.target=Math.max(25,parseInt(this.value)||50);save();" inputmode="numeric"/></div>
+      </div>
+      <div class="opt-section">
+        <div class="opt-label">Export data</div>
+        <button class="action-btn" onclick="copyExport()">&#128203;&nbsp; Copy game data to clipboard</button>
+        <div id="copy-status" class="copy-status"></div>
+        <textarea id="export-textarea" class="export-area" style="display:none;" readonly onclick="this.select()"></textarea>
+      </div>
+      <div class="opt-section">
+        <div class="opt-label">Import data</div>
+        <button class="action-btn" onclick="document.getElementById('import-area').style.display='block'">&#8679;&nbsp; Paste game data to import</button>
+        <div id="import-area" style="display:none;margin-top:8px;">
+          <textarea id="import-textarea" class="export-area" placeholder="Paste exported JSON here..."></textarea>
+          <button class="action-btn" style="margin-top:8px;" onclick="doImport()">Import</button>
+        </div>
+      </div>
+      <div class="opt-section">
+        <div class="opt-label">Game controls</div>
+        <button class="action-btn danger" onclick="newGame()">New game (reset everything)</button>
+      </div>
+      <div class="save-status">&#10003; Scores auto-saved to this device</div>
+    `;
+  }
+
+  document.getElementById('app').innerHTML=`<div class="tab-content">${content}</div><div class="tabbar">${tabbar}</div>`;
+  if(S.tab===2)initNameInputs();
+}
+
+load();render();
+</script>
+</body>
+</html>
