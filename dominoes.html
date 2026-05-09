@@ -93,16 +93,20 @@ html,body{height:100%;background:var(--color-background-tertiary);font-family:va
 
 /* options */
 .opt-section{background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);padding:12px 14px;margin-bottom:12px;}
-.opt-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+.opt-label{font-size:11px;color:var(--color-text-primary);margin-bottom:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
 .opt-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
 .opt-row:last-child{margin-bottom:0;}
-.opt-row label{font-size:14px;color:var(--color-text-secondary);width:80px;flex-shrink:0;}
+.opt-row label{font-size:14px;color:var(--color-text-primary);width:80px;flex-shrink:0;}
 .opt-row input[type=text]{flex:1;font-size:15px;font-weight:500;padding:7px 10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:inherit;}
 .opt-row input[type=number]{width:90px;font-size:15px;padding:7px 10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:inherit;}
 .action-btn{width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);font-size:14px;color:var(--color-text-primary);padding:11px;cursor:pointer;text-align:center;margin-bottom:9px;display:block;font-family:inherit;}
 .action-btn:last-child{margin-bottom:0;}
 .action-btn:active{background:var(--color-border-tertiary);}
 .action-btn.danger{color:#D85A30;}
+.pair-item{background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px;margin-bottom:8px;cursor:pointer;transition:border-color 0.2s,box-shadow 0.2s;}
+.pair-item.active{border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,0.15);}
+.pair-item .pair-name{font-weight:500;color:var(--color-text-primary);margin-bottom:6px;}
+.pair-item .pair-actions{display:flex;gap:8px;font-size:12px;}
 .save-status{font-size:12px;color:var(--color-text-tertiary);text-align:center;margin-top:8px;}
 .copy-status{font-size:12px;color:#1D9E75;text-align:center;margin-top:6px;min-height:18px;}
 textarea.export-area{width:100%;height:130px;font-size:11px;font-family:monospace;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px;background:var(--color-background-secondary);color:var(--color-text-secondary);resize:none;margin-top:8px;-webkit-user-select:text;user-select:text;}
@@ -133,7 +137,8 @@ const S={
   messageUntil:0,
   gameHistory:[],
   playerPairs:[['Peter','Eric']],
-  currentPairIdx:0
+  currentPairIdx:0,
+  pairScores:{0:{scores:[0,0],handScores:[0,0],records:[],gameHistory:[],phase:'setup',firstPlayer:-1,handFirstPlayer:-1,handNum:0}}
 };
 
 function load(){
@@ -158,12 +163,22 @@ function load(){
     S.gameHistory=d.gameHistory||[];
     S.playerPairs=d.playerPairs||[['Peter','Eric']];
     S.currentPairIdx=d.currentPairIdx||0;
+    S.pairScores=d.pairScores||{0:{scores:[0,0],handScores:[0,0],records:[],gameHistory:[],phase:'setup',firstPlayer:-1,handFirstPlayer:-1,handNum:0}};
+    // Initialize pair data structure with legacy data if needed
+    const pidx=S.currentPairIdx;
+    if(!S.pairScores[pidx]){
+      S.pairScores[pidx]={scores:S.scores,handScores:S.handScores,records:S.records,gameHistory:S.gameHistory,phase:S.phase,firstPlayer:S.firstPlayer,handFirstPlayer:S.handFirstPlayer,handNum:S.handNum};
+    }
     S.display='';S.editingIdx=-1;
   }catch(e){}
 }
 
 function save(){
   try{
+    // Update current pair's data before saving
+    const pidx=S.currentPairIdx;
+    if(!S.pairScores[pidx])S.pairScores[pidx]={};
+    S.pairScores[pidx]={scores:S.scores,handScores:S.handScores,records:S.records,gameHistory:S.gameHistory,phase:S.phase,firstPlayer:S.firstPlayer,handFirstPlayer:S.handFirstPlayer,handNum:S.handNum,lastAdded:S.lastAdded,pendingWin:S.pendingWin,message:S.message};
     localStorage.setItem(SK,JSON.stringify({
       names:S.names,scores:S.scores,handScores:S.handScores,
       records:S.records,target:S.target,gameOver:S.gameOver,
@@ -171,7 +186,8 @@ function save(){
       handFirstPlayer:S.handFirstPlayer,handNum:S.handNum,
       lastAdded:S.lastAdded,pendingWin:S.pendingWin,
       message:S.message,gameHistory:S.gameHistory,
-      playerPairs:S.playerPairs,currentPairIdx:S.currentPairIdx
+      playerPairs:S.playerPairs,currentPairIdx:S.currentPairIdx,
+      pairScores:S.pairScores
     }));
   }catch(e){}
 }
@@ -327,6 +343,7 @@ function getExportJSON(){
     phase:S.phase,firstPlayer:S.firstPlayer,
     handFirstPlayer:S.handFirstPlayer,gameHistory:S.gameHistory,
     playerPairs:S.playerPairs,currentPairIdx:S.currentPairIdx,
+    pairScores:S.pairScores,
     exportedAt:new Date().toISOString()
   },null,2);
 }
@@ -361,6 +378,7 @@ function doImport(){
     S.lastAdded=['',''];S.pendingWin=false;S.editingIdx=-1;
     S.gameHistory=d.gameHistory||[];S.playerPairs=d.playerPairs||[['Peter','Eric']];
     S.currentPairIdx=d.currentPairIdx||0;
+    S.pairScores=d.pairScores||{0:{scores:[0,0],handScores:[0,0],records:[],gameHistory:[],phase:'setup',firstPlayer:-1,handFirstPlayer:-1,handNum:0}};
     save();render();
   }catch(err){alert('Could not parse JSON — check the data and try again.');}
 }
@@ -379,8 +397,31 @@ function newGame(){
 
 function selectPlayerPair(idx){
   if(idx<0||idx>=S.playerPairs.length)return;
+  // Save current pair's data
+  const pidx=S.currentPairIdx;
+  if(!S.pairScores[pidx])S.pairScores[pidx]={};
+  S.pairScores[pidx]={scores:S.scores,handScores:S.handScores,records:S.records,gameHistory:S.gameHistory,phase:S.phase,firstPlayer:S.firstPlayer,handFirstPlayer:S.handFirstPlayer,handNum:S.handNum,lastAdded:S.lastAdded,pendingWin:S.pendingWin,message:S.message};
+  
+  // Load new pair's data
   S.currentPairIdx=idx;
   S.names=[S.playerPairs[idx][0],S.playerPairs[idx][1]];
+  
+  if(!S.pairScores[idx]){
+    S.pairScores[idx]={scores:[0,0],handScores:[0,0],records:[],gameHistory:[],phase:'setup',firstPlayer:-1,handFirstPlayer:-1,handNum:0,lastAdded:['',''],pendingWin:false,message:''};
+  }
+  const ps=S.pairScores[idx];
+  S.scores=ps.scores||[0,0];
+  S.handScores=ps.handScores||[0,0];
+  S.records=ps.records||[];
+  S.gameHistory=ps.gameHistory||[];
+  S.phase=ps.phase||'setup';
+  S.firstPlayer=ps.firstPlayer!=null?ps.firstPlayer:-1;
+  S.handFirstPlayer=ps.handFirstPlayer!=null?ps.handFirstPlayer:-1;
+  S.handNum=ps.handNum||0;
+  S.lastAdded=ps.lastAdded||['',''];
+  S.pendingWin=ps.pendingWin||false;
+  S.message=ps.message||'';
+  
   S.editingIdx=-1;
   save();render();
 }
@@ -403,11 +444,26 @@ function newPlayerPair(){
   const n2=prompt('Enter second player name:','Player 2');
   if(!n2)return;
   S.playerPairs.push([n1.trim(),n2.trim()]);
+  const newIdx=S.playerPairs.length-1;
+  S.pairScores[newIdx]={scores:[0,0],handScores:[0,0],records:[],gameHistory:[],phase:'setup',firstPlayer:-1,handFirstPlayer:-1,handNum:0,lastAdded:['',''],pendingWin:false,message:''};
   save();render();
 }
 
 function deletePlayerPair(idx){
   if(S.playerPairs.length<=1){alert('Must keep at least one pair');return;}
+  // Remove pair data
+  const newScores=S.pairScores||{};
+  delete newScores[idx];
+  // Reindex remaining pairs
+  const tempScores={};
+  let newIdx=0;
+  for(let i=0;i<S.playerPairs.length;i++){
+    if(i===idx)continue;
+    if(newScores[i])tempScores[newIdx]=newScores[i];
+    newIdx++;
+  }
+  S.pairScores=tempScores;
+  
   S.playerPairs.splice(idx,1);
   if(S.currentPairIdx>=S.playerPairs.length)S.currentPairIdx=S.playerPairs.length-1;
   S.names=[S.playerPairs[S.currentPairIdx][0],S.playerPairs[S.currentPairIdx][1]];
@@ -452,7 +508,6 @@ function render(){
       </div>`).join('');
 
     content=`
-      ${msgVisible?`<div class="setup-hint">${S.message||'Click player with highest double.'}</div>`:''}
       <div class="scoreboard">${cards}</div>
       <div class="numpad-wrap">
         <div id="display-bar" class="display-bar${S.display?'':' dim'}">${S.display||'0'}</div>
@@ -466,8 +521,9 @@ function render(){
           <button class="domino-btn ${btnClass}" style="margin:0;" onclick="callDomino()">
             ${domTile()} ${btnLabel}
           </button>
-          <button class="domino-btn" style="margin:0;background:#666;width:50px;padding:0;" title="Help" onclick="alert('On game start: Click player with highest double.\\n\\nDuring play: Enter scores and tap player tile.\\n\\nClick Domino when hand is over.\\n\\nClick highest score to win game.')">?</button>
+          <button class="domino-btn" style="margin:0;background:#666;width:50px;padding:0;font-size:20px;" title="Help" onclick="alert('On game start: Click player with highest double.\\n\\nDuring play: Enter scores and tap player tile.\\n\\nClick Domino when hand is over.\\n\\nClick highest score to win game.')">?</button>
         </div>
+        ${msgVisible?`<div class="setup-hint" style="margin-top:8px;">${S.message||'Click player with highest double.'}</div>`:''}
       </div>
     `;
 
@@ -494,7 +550,7 @@ function render(){
 
   } else if(S.tab===2){
     const histRows=S.gameHistory.length===0
-      ?`<tr><td colspan="5" style="text-align:center;color:var(--color-text-tertiary);padding:24px 0">No completed games yet</td></tr>`
+      ?`<tr><td colspan="5" style="text-align:center;color:var(--color-text-tertiary);padding:24px 0">No completed games yet for this pair</td></tr>`
       :S.gameHistory.slice().reverse().map(game=>{
           return `<tr style="border-top:1px solid var(--color-border-tertiary)">
             <td style="font-size:11px;color:var(--color-text-secondary)">${game.date}</td>
@@ -512,19 +568,22 @@ function render(){
 
   } else {
     const pairsHtml=S.playerPairs.map((pair,pidx)=>`
-      <div style="background:${S.currentPairIdx===pidx?'var(--color-background-secondary)':'transparent'};border-radius:8px;padding:8px;margin-bottom:8px;border:${S.currentPairIdx===pidx?'2px solid #1D9E75':'1px solid var(--color-border-tertiary)'}">
-        <div style="font-weight:500;margin-bottom:6px;cursor:pointer" onclick="selectPlayerPair(${pidx})">${pair[0]} vs ${pair[1]}</div>
-        <div style="display:flex;gap:8px;font-size:12px">
-          <button class="action-btn" style="flex:1;padding:6px;margin:0;font-size:13px" onclick="(()=>{const n1=prompt('Edit first player:',S.playerPairs[${pidx}][0]);if(n1)updatePlayerPair(${pidx},0,n1)})()">Edit</button>
-          <button class="action-btn danger" style="flex:1;padding:6px;margin:0;font-size:13px" onclick="deletePlayerPair(${pidx})">Delete</button>
+      <div class="pair-item ${S.currentPairIdx===pidx?'active':''}" onclick="selectPlayerPair(${pidx})">
+        <div class="pair-name">${pair[0]} vs ${pair[1]}</div>
+        <div class="pair-actions">
+          <button class="action-btn" style="flex:1;padding:6px;margin:0;font-size:12px" onclick="event.stopPropagation();(()=>{const n1=prompt('Edit first player:',S.playerPairs[${pidx}][0]);if(n1)updatePlayerPair(${pidx},0,n1)})()">Edit P1</button>
+          <button class="action-btn" style="flex:1;padding:6px;margin:0;font-size:12px" onclick="event.stopPropagation();(()=>{const n2=prompt('Edit second player:',S.playerPairs[${pidx}][1]);if(n2)updatePlayerPair(${pidx},1,n2)})()">Edit P2</button>
+          <button class="action-btn danger" style="flex:1;padding:6px;margin:0;font-size:12px" onclick="event.stopPropagation();deletePlayerPair(${pidx})">Delete</button>
         </div>
       </div>
     `).join('');
 
     content=`
       <div class="opt-section">
-        <div class="opt-label">Player pairs</div>
-        ${pairsHtml}
+        <div class="opt-label">Select active game</div>
+        <div style="max-height:200px;overflow-y:auto;">
+          ${pairsHtml}
+        </div>
         <button class="action-btn" onclick="newPlayerPair()" style="margin-top:8px">+ New pair</button>
       </div>
       <div class="opt-section">
