@@ -60,6 +60,10 @@ html,body{height:100%;background:var(--color-background-tertiary);font-family:va
 .domino-btn.gameover{background:#D85A30;}
 .domino-btn.gameover:active{background:#b04020;}
 .domino-btn.disabled{background:var(--color-background-secondary);color:var(--color-text-tertiary);pointer-events:none;}
+.domino-btn-small{background:#1D9E75;color:#fff;border:none;border-radius:var(--border-radius-md);padding:11px 0;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;transition:background 0.15s,transform 0.1s;flex:1;margin:0;}
+.domino-btn-small:active{background:#0F6E56;transform:scale(0.98);}
+.domino-btn-small.gameover{background:#D85A30;}
+.domino-btn-small.gameover:active{background:#b04020;}
 
 /* scorecards */
 .scoreboard{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
@@ -86,6 +90,12 @@ html,body{height:100%;background:var(--color-background-tertiary);font-family:va
 .hist-table td{padding:7px 7px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:middle;}
 .hist-table tr.domino-row td{background:var(--color-background-secondary);color:#0F6E56;font-style:italic;font-size:12px;}
 .hist-table tr.gameover-row td{background:#E1F5EE;color:#0F6E56;font-weight:600;font-size:12px;}
+
+/* Game tab layout */
+.game-box{background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);padding:12px 14px;margin-bottom:10px;}
+.game-box-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:8px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+.game-box-content{max-height:250px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+
 .del-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:2px 7px;border-radius:4px;color:#D85A30;}
 .del-btn:active{opacity:0.6;}
 .pts-display{color:#1D9E75;font-weight:500;cursor:pointer;border-bottom:1px dashed #9FE1CB;display:inline-block;}
@@ -195,14 +205,29 @@ function save(){
 function ts(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
 
 function domTile(){
-  return `<svg width="34" height="22" viewBox="0 0 34 22" style="flex-shrink:0">
-    <rect x="1" y="1" width="32" height="20" rx="4" fill="#111" stroke="#fff" stroke-width="1.5"/>
-    <line x1="17" y1="3" x2="17" y2="19" stroke="#fff" stroke-width="1"/>
-    <circle cx="9" cy="7" r="2" fill="#fff"/>
-    <circle cx="9" cy="15" r="2" fill="#fff"/>
-    <circle cx="25" cy="6" r="2" fill="#fff"/>
-    <circle cx="25" cy="11" r="2" fill="#fff"/>
-    <circle cx="25" cy="16" r="2" fill="#fff"/>
+  return `<svg width="24" height="24" viewBox="0 0 24 24" style="flex-shrink:0">
+    <defs>
+      <linearGradient id="tile-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#fff"/>
+        <stop offset="100%" stop-color="#f5f5f5"/>
+      </linearGradient>
+      <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#000" flood-opacity="0.16"/>
+      </filter>
+    </defs>
+    <g transform="translate(12 12) rotate(15) scale(0.06 0.0397)">
+      <rect x="-142" y="-302" width="284" height="604" rx="72" fill="url(#tile-bg)" stroke="#111" stroke-width="24" filter="url(#soft-shadow)"/>
+      <rect x="-142" y="-10" width="284" height="20" fill="#111"/>
+      <g fill="#111">
+        <circle cx="-80" cy="-230" r="22"/>
+        <circle cx="0" cy="-150" r="22"/>
+        <circle cx="80" cy="-70" r="22"/>
+        <circle cx="-72" cy="70" r="22"/>
+        <circle cx="72" cy="70" r="22"/>
+        <circle cx="-72" cy="214" r="22"/>
+        <circle cx="72" cy="214" r="22"/>
+      </g>
+    </g>
   </svg>`;
 }
 
@@ -256,7 +281,7 @@ function callDomino(){
   const leftScore=S.handScores[0];
   const rightScore=S.handScores[1];
   const dominoWho=S.firstPlayer===0?1:0;
-  S.message=`That was a ${leftScore} ${rightScore} hand for ${S.names[dominoWho]}. ${S.names[1-dominoWho]} goes first.`;
+  S.message=`Hand and score totals: ${S.names[0]} ${leftScore}/${S.scores[0]}, ${S.names[1]} ${rightScore}/${S.scores[1]}.`;
   S.messageUntil=Date.now()+5000;
   S.records.push({
     who:-1,pts:0,time:ts(),type:'domino',hand:S.handNum,
@@ -267,11 +292,10 @@ function callDomino(){
   if(gameEnds){
     const wi=S.scores[0]>=S.target?0:1;
     const li=1-wi;
-    const winMsg=`${S.names[wi]} won ${S.scores[wi]} to ${S.scores[li]}, last hand was ${rightScore} to ${leftScore} ${S.names[li]}.`;
     S.records.push({who:-1,pts:0,time:ts(),type:'gameover',
       finalScores:[S.scores[0],S.scores[1]],winnerIdx:wi,winnerName:S.names[wi]});
     S.gameHistory.push({date:new Date().toLocaleString(),players:[S.names[0],S.names[1]],scores:[S.scores[0],S.scores[1]],winner:S.names[wi]});
-    S.message=`${S.names[wi]} won ${S.scores[wi]} to ${S.scores[li]}. Click player with highest score.`;
+    S.message=`${S.names[wi]} won ${S.scores[wi]} to ${S.scores[li]} on a ${S.handNum} / ${S.handNum} hand for ${S.names[li]}. Click player with highest double.`;
     S.messageUntil=0;
     S.scores=[0,0];S.handScores=[0,0];S.pendingWin=false;
     S.handFirstPlayer=S.handFirstPlayer===0?1:0;
@@ -497,7 +521,7 @@ function render(){
     const isSetup=S.phase==='setup';
     const dominoDisabled=isSetup||S.gameOver;
     const btnClass=dominoDisabled?'disabled':S.pendingWin?'gameover':'';
-    const btnLabel=S.pendingWin&&!dominoDisabled?'Game Over':'Domino';
+    const btnLabel=S.pendingWin&&!dominoDisabled?'New':'Domino';
     const msgVisible=Date.now()<S.messageUntil||S.phase==='setup';
 
     const firstHighlight=Date.now() < S.firstPlayerHighlightUntil;
@@ -517,54 +541,117 @@ function render(){
           <div class="key" onclick="pressKey('0')">0</div>
           <div class="key" style="background:var(--color-background-secondary);"></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr auto;gap:7px;margin-top:7px;">
-          <button class="domino-btn ${btnClass}" style="margin:0;" onclick="callDomino()">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px;">
+          <button class="domino-btn-small ${btnClass}" onclick="callDomino()" title="Call domino to end this hand">
             ${domTile()} ${btnLabel}
           </button>
-          <button class="domino-btn" style="margin:0;background:#666;width:50px;padding:0;font-size:20px;" title="Help" onclick="alert('On game start: Click player with highest double.\\n\\nDuring play: Enter scores and tap player tile.\\n\\nClick Domino when hand is over.\\n\\nClick highest score to win game.')">?</button>
+          <button class="domino-btn-small" title="Help: On game start, click player with highest double. During play, enter scores and tap player. Click Domino when hand ends." onclick="alert('On game start: Click player with highest double.\\n\\nDuring play: Enter scores and tap player tile.\\n\\nClick Domino when hand is over.\\n\\nClick highest score to win game.')">?</button>
         </div>
         ${msgVisible?`<div class="setup-hint" style="margin-top:8px;">${S.message||'Click player with highest double.'}</div>`:''}
       </div>
     `;
 
   } else if(S.tab===1){
-    const rows=S.records.length===0
-      ?`<tr><td colspan="4" style="text-align:center;color:var(--color-text-tertiary);padding:24px 0">No game history yet</td></tr>`
-      :S.records.slice().reverse().map((rec,ridx)=>{
-          const idx=S.records.length-1-ridx;
-          if(rec.type!=='domino')return '';
-          const leftScore=(rec.handTotals&&rec.handTotals[0]!=null)?rec.handTotals[0]:0;
-          const rightScore=(rec.handTotals&&rec.handTotals[1]!=null)?rec.handTotals[1]:0;
-          return `<tr class="domino-row">
+    // Current hand scores
+    const currentHandRows=S.records.length===0
+      ?`<tr><td colspan="4" style="text-align:center;color:var(--color-text-tertiary);padding:16px 0;font-size:12px">No scores this hand yet</td></tr>`
+      :S.records.filter(r=>r.type==='score'&&r.hand===S.handNum).map((rec,idx)=>{
+          return `<tr>
             <td style="font-size:10px;white-space:nowrap">${rec.time}</td>
-            <td>${leftScore}</td>
-            <td>${rightScore}</td>
-            <td><button class="del-btn" onclick="deleteRecord(${idx})">&#10005;</button></td>
+            <td colspan="2" style="text-align:right;font-weight:500">${S.names[rec.who]}</td>
+            <td style="text-align:right;color:#1D9E75;font-weight:500">${rec.pts}</td>
           </tr>`;
         }).join('');
 
-    content=`<table class="hist-table">
-      <thead><tr><th>Time</th><th>${S.names[0]}</th><th>${S.names[1]}</th><th></th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
+    // Completed game scores
+    const finishedGameRows=S.gameHistory.length===0
+      ?`<tr><td colspan="5" style="text-align:center;color:var(--color-text-tertiary);padding:16px 0;font-size:12px">No completed games yet</td></tr>`
+      :S.gameHistory.slice().reverse().map(game=>{
+          return `<tr>
+            <td style="font-size:10px;color:var(--color-text-secondary);white-space:nowrap">${game.date}</td>
+            <td style="text-align:center;font-weight:500;font-size:13px">${game.scores[0]}</td>
+            <td style="text-align:center;font-size:10px;color:var(--color-text-tertiary)">vs</td>
+            <td style="text-align:center;font-weight:500;font-size:13px">${game.scores[1]}</td>
+            <td style="font-weight:600;color:#1D9E75;font-size:13px">${game.winner}</td>
+          </tr>`;
+        }).join('');
+
+    content=`
+      <div class="game-box">
+        <div class="game-box-label">Current Hand</div>
+        <div class="game-box-content">
+          <table class="hist-table" style="font-size:12px">
+            <tbody>${currentHandRows}</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="game-box">
+        <div class="game-box-label">Completed Games (Recent First)</div>
+        <div class="game-box-content">
+          <table class="hist-table" style="font-size:12px">
+            <tbody>${finishedGameRows}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
 
   } else if(S.tab===2){
-    const histRows=S.gameHistory.length===0
-      ?`<tr><td colspan="5" style="text-align:center;color:var(--color-text-tertiary);padding:24px 0">No completed games yet for this pair</td></tr>`
-      :S.gameHistory.slice().reverse().map(game=>{
-          return `<tr style="border-top:1px solid var(--color-border-tertiary)">
-            <td style="font-size:11px;color:var(--color-text-secondary)">${game.date}</td>
-            <td style="text-align:center;font-weight:500">${game.scores[0]}</td>
-            <td style="text-align:center;font-size:12px">vs</td>
-            <td style="text-align:center;font-weight:500">${game.scores[1]}</td>
-            <td style="font-weight:600;color:#1D9E75">${game.winner}</td>
-          </tr>`;
-        }).join('');
+    // Calculate grand totals
+    let grandTotals=[0,0];
+    let gamesPlayed=[0,0];
+    let gameWins=[0,0];
+    for(const game of S.gameHistory){
+      grandTotals[0]+=game.scores[0];
+      grandTotals[1]+=game.scores[1];
+      if(game.scores[0]>game.scores[1]){gameWins[0]++;}else{gameWins[1]++;}
+      gamesPlayed[0]++;gamesPlayed[1]++;
+    }
+    
+    const gameDiffHtml=S.gameHistory.length===0?
+      `<tr><td colspan="3" style="text-align:center;color:var(--color-text-tertiary);padding:16px 0;font-size:12px">No games recorded yet</td></tr>`:
+      `<tr>
+        <td style="font-weight:500">${S.names[0]} - ${S.names[1]}</td>
+        <td style="text-align:center;font-weight:600;color:#1D9E75">${grandTotals[0]-grandTotals[1]}</td>
+        <td style="font-size:11px;color:var(--color-text-secondary);text-align:right">${gamesPlayed[0]} games</td>
+      </tr>`;
 
-    content=`<table class="hist-table">
-      <thead><tr><th>Date</th><th>${S.names[0]}</th><th></th><th>${S.names[1]}</th><th>Winner</th></tr></thead>
-      <tbody>${histRows}</tbody>
-    </table>`;
+    const scoreDiffMsg=`Score Difference Report\n\n${S.names[0]} - ${S.names[1]}: ${grandTotals[0]-grandTotals[1]} points\n\nTotal games: ${gamesPlayed[0]}\n${S.names[0]} wins: ${gameWins[0]}\n${S.names[1]} wins: ${gameWins[1]}`;
+    const gameHistMsg=S.gameHistory.length===0?`Game History for ${S.names[0]} vs ${S.names[1]}\n\nNo games yet.`:`Game History for ${S.names[0]} vs ${S.names[1]}\n\n`+S.gameHistory.slice().reverse().map(g=>`${g.date}: ${g.winner} won ${g.scores[0]}-${g.scores[1]}`).join('\n');
+
+    content=`
+      <div class="opt-section">
+        <div class="opt-label">Grand Totals for ${S.names[0]} vs ${S.names[1]}</div>
+        <table class="hist-table" style="font-size:13px;margin-bottom:12px">
+          <tbody>
+            <tr>
+              <td style="font-weight:500;padding:8px 0">${S.names[0]}</td>
+              <td style="text-align:right;font-weight:600;color:#1D9E75;padding:8px 0">${grandTotals[0]} pts</td>
+              <td style="text-align:right;font-size:11px;color:var(--color-text-secondary);padding:8px 0">${gameWins[0]} wins</td>
+            </tr>
+            <tr style="border-top:0.5px solid var(--color-border-tertiary)">
+              <td style="font-weight:500;padding:8px 0">${S.names[1]}</td>
+              <td style="text-align:right;font-weight:600;color:#1D9E75;padding:8px 0">${grandTotals[1]} pts</td>
+              <td style="text-align:right;font-size:11px;color:var(--color-text-secondary);padding:8px 0">${gameWins[1]} wins</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="opt-section">
+        <div class="opt-label">Generate Reports</div>
+        <button class="action-btn" onclick="alert(${JSON.stringify(scoreDiffMsg)})" style="margin-bottom:8px">📊 Score Difference</button>
+        <button class="action-btn" onclick="alert(${JSON.stringify(gameHistMsg)})">📈 Game History</button>
+      </div>
+      
+      <div class="opt-section">
+        <div class="opt-label">Games Record</div>
+        <table class="hist-table" style="font-size:12px">
+          <tbody>
+            ${gameDiffHtml}
+          </tbody>
+        </table>
+      </div>
+    `;
 
   } else {
     const pairsHtml=S.playerPairs.map((pair,pidx)=>`

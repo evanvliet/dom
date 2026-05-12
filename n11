@@ -1,0 +1,31 @@
+n11
+
+Score Tab
+Action button:
+replaces Domino button
+G game start
+D domino
+N new game
+G: "who got the high double"
+click -> D
+set frst player to other user
+D: "enter score and click user to assign points"
+after 20 seconds of inactivity blank message
+click -> "Peter ahesd 33 to 27 on a 4 5 hand"
+if total > max -> N
+N: "Peter won 55 to 27 on a 4 5 hand"
+Action label changes to "New Game"
+click -> reset scores and start new game and ->G
+Game Tab
+✅ Two-box layout:
+Top: Current hand scores (clears on new game)
+Bottom: Completed games (most recent first) with timestamps
+Stats Tab
+✅ Grand totals: Displays cumulative scores & win counts per player
+✅ Report buttons:
+📊 Score Difference
+📈 Game History
+Options Tab
+✅ Player pairs: Listed as clickable items
+✅ Edit controls: Edit P1/P2 buttons per pair
+✅ New pair button: "+ New pair" to add game pairings
