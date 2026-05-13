@@ -60,10 +60,6 @@ html,body{height:100%;background:var(--color-background-tertiary);font-family:va
 .domino-btn.gameover{background:#D85A30;}
 .domino-btn.gameover:active{background:#b04020;}
 .domino-btn.disabled{background:var(--color-background-secondary);color:var(--color-text-tertiary);pointer-events:none;}
-.domino-btn-small{background:#1D9E75;color:#fff;border:none;border-radius:var(--border-radius-md);padding:11px 0;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;transition:background 0.15s,transform 0.1s;flex:1;margin:0;}
-.domino-btn-small:active{background:#0F6E56;transform:scale(0.98);}
-.domino-btn-small.gameover{background:#D85A30;}
-.domino-btn-small.gameover:active{background:#b04020;}
 
 /* scorecards */
 .scoreboard{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
@@ -90,12 +86,6 @@ html,body{height:100%;background:var(--color-background-tertiary);font-family:va
 .hist-table td{padding:7px 7px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:middle;}
 .hist-table tr.domino-row td{background:var(--color-background-secondary);color:#0F6E56;font-style:italic;font-size:12px;}
 .hist-table tr.gameover-row td{background:#E1F5EE;color:#0F6E56;font-weight:600;font-size:12px;}
-
-/* Game tab layout */
-.game-box{background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);padding:12px 14px;margin-bottom:10px;}
-.game-box-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:8px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
-.game-box-content{max-height:250px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-
 .del-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:2px 7px;border-radius:4px;color:#D85A30;}
 .del-btn:active{opacity:0.6;}
 .pts-display{color:#1D9E75;font-weight:500;cursor:pointer;border-bottom:1px dashed #9FE1CB;display:inline-block;}
@@ -103,20 +93,16 @@ html,body{height:100%;background:var(--color-background-tertiary);font-family:va
 
 /* options */
 .opt-section{background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);padding:12px 14px;margin-bottom:12px;}
-.opt-label{font-size:11px;color:var(--color-text-primary);margin-bottom:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+.opt-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
 .opt-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
 .opt-row:last-child{margin-bottom:0;}
-.opt-row label{font-size:14px;color:var(--color-text-primary);width:80px;flex-shrink:0;}
+.opt-row label{font-size:14px;color:var(--color-text-secondary);width:80px;flex-shrink:0;}
 .opt-row input[type=text]{flex:1;font-size:15px;font-weight:500;padding:7px 10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:inherit;}
 .opt-row input[type=number]{width:90px;font-size:15px;padding:7px 10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:inherit;}
 .action-btn{width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);font-size:14px;color:var(--color-text-primary);padding:11px;cursor:pointer;text-align:center;margin-bottom:9px;display:block;font-family:inherit;}
 .action-btn:last-child{margin-bottom:0;}
 .action-btn:active{background:var(--color-border-tertiary);}
 .action-btn.danger{color:#D85A30;}
-.pair-item{background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px;margin-bottom:8px;cursor:pointer;transition:border-color 0.2s,box-shadow 0.2s;}
-.pair-item.active{border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,0.15);}
-.pair-item .pair-name{font-weight:500;color:var(--color-text-primary);margin-bottom:6px;}
-.pair-item .pair-actions{display:flex;gap:8px;font-size:12px;}
 .save-status{font-size:12px;color:var(--color-text-tertiary);text-align:center;margin-top:8px;}
 .copy-status{font-size:12px;color:#1D9E75;text-align:center;margin-top:6px;min-height:18px;}
 textarea.export-area{width:100%;height:130px;font-size:11px;font-family:monospace;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px;background:var(--color-background-secondary);color:var(--color-text-secondary);resize:none;margin-top:8px;-webkit-user-select:text;user-select:text;}
@@ -125,16 +111,16 @@ textarea.export-area{width:100%;height:130px;font-size:11px;font-family:monospac
 <body>
 <div class="app" id="app"></div>
 <script>
-const SK='dom_v10';
+const SK='dom_v9';
 const S={
-  names:['Peter','Eric'],
+  names:['Player 1','Player 2'],
   scores:[0,0],
   handScores:[0,0],
   display:'',
   records:[],
   target:50,
   gameOver:false,
-  tab:3,
+  tab:0,
   phase:'setup',
   firstPlayer:-1,
   handFirstPlayer:-1,
@@ -142,13 +128,7 @@ const S={
   firstPlayerHighlightUntil:0,
   lastAdded:['',''],
   pendingWin:false,
-  editingIdx:-1,
-  message:'',
-  messageUntil:0,
-  gameHistory:[],
-  playerPairs:[['Peter','Eric']],
-  currentPairIdx:0,
-  pairScores:{0:{scores:[0,0],handScores:[0,0],records:[],gameHistory:[],phase:'setup',firstPlayer:-1,handFirstPlayer:-1,handNum:0}}
+  editingIdx:-1
 };
 
 function load(){
@@ -156,48 +136,31 @@ function load(){
     const r=localStorage.getItem(SK);
     if(!r)return;
     const d=JSON.parse(r);
-    S.names=d.names||['Peter','Eric'];
+    S.names=d.names||['Player 1','Player 2'];
     S.scores=d.scores||[0,0];
     S.handScores=d.handScores||[0,0];
     S.records=d.records||[];
     S.target=d.target!=null?d.target:50;
     S.gameOver=!!d.gameOver;
-    S.tab=d.tab!=null?d.tab:0;
+    S.tab=d.tab||0;
     S.phase=d.phase||'setup';
     S.firstPlayer=d.firstPlayer!=null?d.firstPlayer:-1;
     S.handFirstPlayer=d.handFirstPlayer!=null?d.handFirstPlayer:-1;
     S.handNum=d.handNum||0;
     S.lastAdded=d.lastAdded||['',''];
     S.pendingWin=!!d.pendingWin;
-    S.message=d.message||'';
-    S.gameHistory=d.gameHistory||[];
-    S.playerPairs=d.playerPairs||[['Peter','Eric']];
-    S.currentPairIdx=d.currentPairIdx||0;
-    S.pairScores=d.pairScores||{0:{scores:[0,0],handScores:[0,0],records:[],gameHistory:[],phase:'setup',firstPlayer:-1,handFirstPlayer:-1,handNum:0}};
-    // Initialize pair data structure with legacy data if needed
-    const pidx=S.currentPairIdx;
-    if(!S.pairScores[pidx]){
-      S.pairScores[pidx]={scores:S.scores,handScores:S.handScores,records:S.records,gameHistory:S.gameHistory,phase:S.phase,firstPlayer:S.firstPlayer,handFirstPlayer:S.handFirstPlayer,handNum:S.handNum};
-    }
     S.display='';S.editingIdx=-1;
   }catch(e){}
 }
 
 function save(){
   try{
-    // Update current pair's data before saving
-    const pidx=S.currentPairIdx;
-    if(!S.pairScores[pidx])S.pairScores[pidx]={};
-    S.pairScores[pidx]={scores:S.scores,handScores:S.handScores,records:S.records,gameHistory:S.gameHistory,phase:S.phase,firstPlayer:S.firstPlayer,handFirstPlayer:S.handFirstPlayer,handNum:S.handNum,lastAdded:S.lastAdded,pendingWin:S.pendingWin,message:S.message};
     localStorage.setItem(SK,JSON.stringify({
       names:S.names,scores:S.scores,handScores:S.handScores,
       records:S.records,target:S.target,gameOver:S.gameOver,
       tab:S.tab,phase:S.phase,firstPlayer:S.firstPlayer,
       handFirstPlayer:S.handFirstPlayer,handNum:S.handNum,
-      lastAdded:S.lastAdded,pendingWin:S.pendingWin,
-      message:S.message,gameHistory:S.gameHistory,
-      playerPairs:S.playerPairs,currentPairIdx:S.currentPairIdx,
-      pairScores:S.pairScores
+      lastAdded:S.lastAdded,pendingWin:S.pendingWin
     }));
   }catch(e){}
 }
@@ -205,34 +168,19 @@ function save(){
 function ts(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
 
 function domTile(){
-  return `<svg width="24" height="24" viewBox="0 0 24 24" style="flex-shrink:0">
-    <defs>
-      <linearGradient id="tile-bg" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stop-color="#fff"/>
-        <stop offset="100%" stop-color="#f5f5f5"/>
-      </linearGradient>
-      <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
-        <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#000" flood-opacity="0.16"/>
-      </filter>
-    </defs>
-    <g transform="translate(12 12) rotate(15) scale(0.06 0.0397)">
-      <rect x="-142" y="-302" width="284" height="604" rx="72" fill="url(#tile-bg)" stroke="#111" stroke-width="24" filter="url(#soft-shadow)"/>
-      <rect x="-142" y="-10" width="284" height="20" fill="#111"/>
-      <g fill="#111">
-        <circle cx="-80" cy="-230" r="22"/>
-        <circle cx="0" cy="-150" r="22"/>
-        <circle cx="80" cy="-70" r="22"/>
-        <circle cx="-72" cy="70" r="22"/>
-        <circle cx="72" cy="70" r="22"/>
-        <circle cx="-72" cy="214" r="22"/>
-        <circle cx="72" cy="214" r="22"/>
-      </g>
-    </g>
+  return `<svg width="34" height="22" viewBox="0 0 34 22" style="flex-shrink:0">
+    <rect x="1" y="1" width="32" height="20" rx="4" fill="#111" stroke="#fff" stroke-width="1.5"/>
+    <line x1="17" y1="3" x2="17" y2="19" stroke="#fff" stroke-width="1"/>
+    <circle cx="9" cy="7" r="2" fill="#fff"/>
+    <circle cx="9" cy="15" r="2" fill="#fff"/>
+    <circle cx="25" cy="6" r="2" fill="#fff"/>
+    <circle cx="25" cy="11" r="2" fill="#fff"/>
+    <circle cx="25" cy="16" r="2" fill="#fff"/>
   </svg>`;
 }
 
 function pressKey(v){
-  if(S.gameOver)return;
+  if(S.gameOver||S.phase==='setup')return;
   if(S.display.length>=3)return;
   S.display+=v;
   const el=document.getElementById('display-bar');
@@ -248,9 +196,8 @@ function delKey(){
 function tapPlayer(i){
   if(S.gameOver)return;
   if(S.phase==='setup'){
-    S.message='';
-    S.firstPlayer=i;S.handFirstPlayer=i;S.handNum=1;
     const pts=parseInt(S.display)||0;
+    S.firstPlayer=i;S.handFirstPlayer=i;S.handNum=1;
     if(pts>0){
       S.scores[i]+=pts;S.handScores[i]+=pts;
       S.lastAdded=['',''];S.lastAdded[i]='+'+pts;
@@ -278,11 +225,6 @@ function tapPlayer(i){
 function callDomino(){
   if(S.phase!=='play'||S.gameOver)return;
   const gameEnds=S.pendingWin;
-  const leftScore=S.handScores[0];
-  const rightScore=S.handScores[1];
-  const dominoWho=S.firstPlayer===0?1:0;
-  S.message=`Hand and score totals: ${S.names[0]} ${leftScore}/${S.scores[0]}, ${S.names[1]} ${rightScore}/${S.scores[1]}.`;
-  S.messageUntil=Date.now()+5000;
   S.records.push({
     who:-1,pts:0,time:ts(),type:'domino',hand:S.handNum,
     totalAfter:[S.scores[0],S.scores[1]],
@@ -291,12 +233,8 @@ function callDomino(){
   });
   if(gameEnds){
     const wi=S.scores[0]>=S.target?0:1;
-    const li=1-wi;
     S.records.push({who:-1,pts:0,time:ts(),type:'gameover',
       finalScores:[S.scores[0],S.scores[1]],winnerIdx:wi,winnerName:S.names[wi]});
-    S.gameHistory.push({date:new Date().toLocaleString(),players:[S.names[0],S.names[1]],scores:[S.scores[0],S.scores[1]],winner:S.names[wi]});
-    S.message=`${S.names[wi]} won ${S.scores[wi]} to ${S.scores[li]} on a ${S.handNum} / ${S.handNum} hand for ${S.names[li]}. Click player with highest double.`;
-    S.messageUntil=0;
     S.scores=[0,0];S.handScores=[0,0];S.pendingWin=false;
     S.handFirstPlayer=S.handFirstPlayer===0?1:0;
     S.firstPlayer=S.handFirstPlayer;S.handNum++;
@@ -308,8 +246,8 @@ function callDomino(){
   S.handScores=[0,0];S.lastAdded=['',''];S.pendingWin=false;
   S.handFirstPlayer=S.handFirstPlayer===0?1:0;
   S.firstPlayer=S.handFirstPlayer;S.handNum++;
-  S.firstPlayerHighlightUntil=Date.now()+5000;
-  setTimeout(()=>{if(Date.now()>=S.firstPlayerHighlightUntil){S.firstPlayerHighlightUntil=0;render();}},5000);
+  S.firstPlayerHighlightUntil=Date.now()+10000;
+  setTimeout(()=>{if(Date.now()>=S.firstPlayerHighlightUntil){S.firstPlayerHighlightUntil=0;render();}},10000);
   S.display='';save();render();
 }
 
@@ -365,9 +303,7 @@ function getExportJSON(){
     names:S.names,scores:S.scores,handScores:S.handScores,
     records:S.records,target:S.target,handNum:S.handNum,
     phase:S.phase,firstPlayer:S.firstPlayer,
-    handFirstPlayer:S.handFirstPlayer,gameHistory:S.gameHistory,
-    playerPairs:S.playerPairs,currentPairIdx:S.currentPairIdx,
-    pairScores:S.pairScores,
+    handFirstPlayer:S.handFirstPlayer,
     exportedAt:new Date().toISOString()
   },null,2);
 }
@@ -400,9 +336,6 @@ function doImport(){
     S.handFirstPlayer=d.handFirstPlayer!=null?d.handFirstPlayer:-1;
     S.handNum=d.handNum||0;S.display='';S.gameOver=false;S.tab=0;
     S.lastAdded=['',''];S.pendingWin=false;S.editingIdx=-1;
-    S.gameHistory=d.gameHistory||[];S.playerPairs=d.playerPairs||[['Peter','Eric']];
-    S.currentPairIdx=d.currentPairIdx||0;
-    S.pairScores=d.pairScores||{0:{scores:[0,0],handScores:[0,0],records:[],gameHistory:[],phase:'setup',firstPlayer:-1,handFirstPlayer:-1,handNum:0}};
     save();render();
   }catch(err){alert('Could not parse JSON — check the data and try again.');}
 }
@@ -412,86 +345,7 @@ function newGame(){
   S.scores=[0,0];S.handScores=[0,0];S.display='';S.records=[];
   S.gameOver=false;S.pendingWin=false;S.phase='setup';
   S.firstPlayer=-1;S.handFirstPlayer=-1;
-  S.handNum=0;S.firstPlayerHighlightUntil=0;S.lastAdded=['',''];
-  S.editingIdx=-1;S.tab=0;S.message='';S.messageUntil=0;
-  S.message='Click player with highest double.';
-  S.messageUntil=0;
-  save();render();
-}
-
-function selectPlayerPair(idx){
-  if(idx<0||idx>=S.playerPairs.length)return;
-  // Save current pair's data
-  const pidx=S.currentPairIdx;
-  if(!S.pairScores[pidx])S.pairScores[pidx]={};
-  S.pairScores[pidx]={scores:S.scores,handScores:S.handScores,records:S.records,gameHistory:S.gameHistory,phase:S.phase,firstPlayer:S.firstPlayer,handFirstPlayer:S.handFirstPlayer,handNum:S.handNum,lastAdded:S.lastAdded,pendingWin:S.pendingWin,message:S.message};
-  
-  // Load new pair's data
-  S.currentPairIdx=idx;
-  S.names=[S.playerPairs[idx][0],S.playerPairs[idx][1]];
-  
-  if(!S.pairScores[idx]){
-    S.pairScores[idx]={scores:[0,0],handScores:[0,0],records:[],gameHistory:[],phase:'setup',firstPlayer:-1,handFirstPlayer:-1,handNum:0,lastAdded:['',''],pendingWin:false,message:''};
-  }
-  const ps=S.pairScores[idx];
-  S.scores=ps.scores||[0,0];
-  S.handScores=ps.handScores||[0,0];
-  S.records=ps.records||[];
-  S.gameHistory=ps.gameHistory||[];
-  S.phase=ps.phase||'setup';
-  S.firstPlayer=ps.firstPlayer!=null?ps.firstPlayer:-1;
-  S.handFirstPlayer=ps.handFirstPlayer!=null?ps.handFirstPlayer:-1;
-  S.handNum=ps.handNum||0;
-  S.lastAdded=ps.lastAdded||['',''];
-  S.pendingWin=ps.pendingWin||false;
-  S.message=ps.message||'';
-  
-  S.editingIdx=-1;
-  save();render();
-}
-
-function updatePlayerPair(pairIdx,playerIdx,newName){
-  if(pairIdx<0||pairIdx>=S.playerPairs.length)return;
-  if(playerIdx<0||playerIdx>1)return;
-  newName=newName.trim()||'Player '+(playerIdx+1);
-  S.playerPairs[pairIdx][playerIdx]=newName;
-  if(pairIdx===S.currentPairIdx){
-    S.names[playerIdx]=newName;
-  }
-  S.editingIdx=-1;
-  save();render();
-}
-
-function newPlayerPair(){
-  const n1=prompt('Enter first player name:','Player 1');
-  if(!n1)return;
-  const n2=prompt('Enter second player name:','Player 2');
-  if(!n2)return;
-  S.playerPairs.push([n1.trim(),n2.trim()]);
-  const newIdx=S.playerPairs.length-1;
-  S.pairScores[newIdx]={scores:[0,0],handScores:[0,0],records:[],gameHistory:[],phase:'setup',firstPlayer:-1,handFirstPlayer:-1,handNum:0,lastAdded:['',''],pendingWin:false,message:''};
-  save();render();
-}
-
-function deletePlayerPair(idx){
-  if(S.playerPairs.length<=1){alert('Must keep at least one pair');return;}
-  // Remove pair data
-  const newScores=S.pairScores||{};
-  delete newScores[idx];
-  // Reindex remaining pairs
-  const tempScores={};
-  let newIdx=0;
-  for(let i=0;i<S.playerPairs.length;i++){
-    if(i===idx)continue;
-    if(newScores[i])tempScores[newIdx]=newScores[i];
-    newIdx++;
-  }
-  S.pairScores=tempScores;
-  
-  S.playerPairs.splice(idx,1);
-  if(S.currentPairIdx>=S.playerPairs.length)S.currentPairIdx=S.playerPairs.length-1;
-  S.names=[S.playerPairs[S.currentPairIdx][0],S.playerPairs[S.currentPairIdx][1]];
-  S.editingIdx=-1;
+  S.handNum=0;S.firstPlayerHighlightUntil=0;S.lastAdded=['',''];S.editingIdx=-1;S.tab=0;
   save();render();
 }
 
@@ -509,10 +363,9 @@ function render(){
   const tabIcons=[
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>`,
-    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`
   ];
-  const tabNames=['Score','Game','Stats','Options'];
+  const tabNames=['Score','History','Options'];
   const tabbar=tabNames.map((n,i)=>`<div class="tbtab ${S.tab===i?'active':''}" onclick="setTab(${i})">${tabIcons[i]}<span>${n}</span></div>`).join('');
 
   let content='';
@@ -521,18 +374,26 @@ function render(){
     const isSetup=S.phase==='setup';
     const dominoDisabled=isSetup||S.gameOver;
     const btnClass=dominoDisabled?'disabled':S.pendingWin?'gameover':'';
-    const btnLabel=S.pendingWin&&!dominoDisabled?'New':'Domino';
-    const msgVisible=Date.now()<S.messageUntil||S.phase==='setup';
+    const btnLabel=S.pendingWin&&!dominoDisabled?'Game Over':'Domino';
 
     const firstHighlight=Date.now() < S.firstPlayerHighlightUntil;
     const cards=[0,1].map(i=>`
       <div class="scard ${isSetup?'pending-setup':firstHighlight&&S.firstPlayer===i?'goes-first':''}" onclick="tapPlayer(${i})">
         <div class="pname">${S.names[i]}</div>
-        <div class="score-total">${S.scores[i]}</div>
+        <div class="score-pair">
+          <span class="score-hand">${S.handScores[i]}</span>
+          <span class="score-slash">/</span>
+          <span class="score-total">${S.scores[i]}</span>
+        </div>
+        <div class="score-labels">
+          <span class="score-lbl-hand">hand</span>
+          <span class="score-lbl-sep">/</span>
+          <span class="score-lbl-tot">total</span>
+        </div>
+        <div class="lastadd">${S.lastAdded[i]||''}</div>
       </div>`).join('');
 
     content=`
-      <div class="scoreboard">${cards}</div>
       <div class="numpad-wrap">
         <div id="display-bar" class="display-bar${S.display?'':' dim'}">${S.display||'0'}</div>
         <div class="keypad">
@@ -541,137 +402,44 @@ function render(){
           <div class="key" onclick="pressKey('0')">0</div>
           <div class="key" style="background:var(--color-background-secondary);"></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px;">
-          <button class="domino-btn-small ${btnClass}" onclick="callDomino()" title="Call domino to end this hand">
-            ${domTile()} ${btnLabel}
-          </button>
-          <button class="domino-btn-small" title="Help: On game start, click player with highest double. During play, enter scores and tap player. Click Domino when hand ends." onclick="alert('On game start: Click player with highest double.\\n\\nDuring play: Enter scores and tap player tile.\\n\\nClick Domino when hand is over.\\n\\nClick highest score to win game.')">?</button>
-        </div>
-        ${msgVisible?`<div class="setup-hint" style="margin-top:8px;">${S.message||'Click player with highest double.'}</div>`:''}
+        <button class="domino-btn ${btnClass}" onclick="callDomino()">
+          ${domTile()} ${btnLabel}
+        </button>
       </div>
+      ${isSetup?`<div class="setup-hint">Tap the player who goes first.<br>Enter their opening score first if they score on the opening play.</div>`:''}
+      <div class="scoreboard">${cards}</div>
     `;
 
   } else if(S.tab===1){
-    // Current hand scores
-    const currentHandRows=S.records.length===0
-      ?`<tr><td colspan="4" style="text-align:center;color:var(--color-text-tertiary);padding:16px 0;font-size:12px">No scores this hand yet</td></tr>`
-      :S.records.filter(r=>r.type==='score'&&r.hand===S.handNum).map((rec,idx)=>{
-          return `<tr>
-            <td style="font-size:10px;white-space:nowrap">${rec.time}</td>
-            <td colspan="2" style="text-align:right;font-weight:500">${S.names[rec.who]}</td>
-            <td style="text-align:right;color:#1D9E75;font-weight:500">${rec.pts}</td>
-          </tr>`;
-        }).join('');
-
-    // Completed game scores
-    const finishedGameRows=S.gameHistory.length===0
-      ?`<tr><td colspan="5" style="text-align:center;color:var(--color-text-tertiary);padding:16px 0;font-size:12px">No completed games yet</td></tr>`
-      :S.gameHistory.slice().reverse().map(game=>{
-          return `<tr>
-            <td style="font-size:10px;color:var(--color-text-secondary);white-space:nowrap">${game.date}</td>
-            <td style="text-align:center;font-weight:500;font-size:13px">${game.scores[0]}</td>
-            <td style="text-align:center;font-size:10px;color:var(--color-text-tertiary)">vs</td>
-            <td style="text-align:center;font-weight:500;font-size:13px">${game.scores[1]}</td>
-            <td style="font-weight:600;color:#1D9E75;font-size:13px">${game.winner}</td>
-          </tr>`;
-        }).join('');
-
-    content=`
-      <div class="game-box">
-        <div class="game-box-label">Current Hand</div>
-        <div class="game-box-content">
-          <table class="hist-table" style="font-size:12px">
-            <tbody>${currentHandRows}</tbody>
-          </table>
-        </div>
-      </div>
-      <div class="game-box">
-        <div class="game-box-label">Completed Games (Recent First)</div>
-        <div class="game-box-content">
-          <table class="hist-table" style="font-size:12px">
-            <tbody>${finishedGameRows}</tbody>
-          </table>
-        </div>
-      </div>
-    `;
-
-  } else if(S.tab===2){
-    // Calculate grand totals
-    let grandTotals=[0,0];
-    let gamesPlayed=[0,0];
-    let gameWins=[0,0];
-    for(const game of S.gameHistory){
-      grandTotals[0]+=game.scores[0];
-      grandTotals[1]+=game.scores[1];
-      if(game.scores[0]>game.scores[1]){gameWins[0]++;}else{gameWins[1]++;}
-      gamesPlayed[0]++;gamesPlayed[1]++;
+    const dominoIndices=[];
+    for(let i=0;i<S.records.length;i++){
+      if(S.records[i].type==='domino')dominoIndices.push(i);
     }
-    
-    const gameDiffHtml=S.gameHistory.length===0?
-      `<tr><td colspan="3" style="text-align:center;color:var(--color-text-tertiary);padding:16px 0;font-size:12px">No games recorded yet</td></tr>`:
-      `<tr>
-        <td style="font-weight:500">${S.names[0]} - ${S.names[1]}</td>
-        <td style="text-align:center;font-weight:600;color:#1D9E75">${grandTotals[0]-grandTotals[1]}</td>
-        <td style="font-size:11px;color:var(--color-text-secondary);text-align:right">${gamesPlayed[0]} games</td>
-      </tr>`;
+    const rows=dominoIndices.length===0
+      ?`<tr><td colspan="4" style="text-align:center;color:var(--color-text-tertiary);padding:24px 0">No domino history yet</td></tr>`
+      :dominoIndices.slice().reverse().map(idx=>{
+          const rec=S.records[idx];
+          const leftGain=(rec.handTotals&&rec.handTotals[0]!=null)?rec.handTotals[0]:0;
+          const rightGain=(rec.handTotals&&rec.handTotals[1]!=null)?rec.handTotals[1]:0;
+          return `<tr class="domino-row">
+            <td style="font-size:10px;white-space:nowrap">${rec.time}</td>
+            <td>${rec.totalAfter[0]} (${leftGain})</td>
+            <td>${rec.totalAfter[1]} (${rightGain})</td>
+            <td><button class="del-btn" onclick="deleteRecord(${idx})">&#10005;</button></td>
+          </tr>`;
+        }).join('');
 
-    const scoreDiffMsg=`Score Difference Report\n\n${S.names[0]} - ${S.names[1]}: ${grandTotals[0]-grandTotals[1]} points\n\nTotal games: ${gamesPlayed[0]}\n${S.names[0]} wins: ${gameWins[0]}\n${S.names[1]} wins: ${gameWins[1]}`;
-    const gameHistMsg=S.gameHistory.length===0?`Game History for ${S.names[0]} vs ${S.names[1]}\n\nNo games yet.`:`Game History for ${S.names[0]} vs ${S.names[1]}\n\n`+S.gameHistory.slice().reverse().map(g=>`${g.date}: ${g.winner} won ${g.scores[0]}-${g.scores[1]}`).join('\n');
-
-    content=`
-      <div class="opt-section">
-        <div class="opt-label">Grand Totals for ${S.names[0]} vs ${S.names[1]}</div>
-        <table class="hist-table" style="font-size:13px;margin-bottom:12px">
-          <tbody>
-            <tr>
-              <td style="font-weight:500;padding:8px 0">${S.names[0]}</td>
-              <td style="text-align:right;font-weight:600;color:#1D9E75;padding:8px 0">${grandTotals[0]} pts</td>
-              <td style="text-align:right;font-size:11px;color:var(--color-text-secondary);padding:8px 0">${gameWins[0]} wins</td>
-            </tr>
-            <tr style="border-top:0.5px solid var(--color-border-tertiary)">
-              <td style="font-weight:500;padding:8px 0">${S.names[1]}</td>
-              <td style="text-align:right;font-weight:600;color:#1D9E75;padding:8px 0">${grandTotals[1]} pts</td>
-              <td style="text-align:right;font-size:11px;color:var(--color-text-secondary);padding:8px 0">${gameWins[1]} wins</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      
-      <div class="opt-section">
-        <div class="opt-label">Generate Reports</div>
-        <button class="action-btn" onclick="alert(${JSON.stringify(scoreDiffMsg)})" style="margin-bottom:8px">📊 Score Difference</button>
-        <button class="action-btn" onclick="alert(${JSON.stringify(gameHistMsg)})">📈 Game History</button>
-      </div>
-      
-      <div class="opt-section">
-        <div class="opt-label">Games Record</div>
-        <table class="hist-table" style="font-size:12px">
-          <tbody>
-            ${gameDiffHtml}
-          </tbody>
-        </table>
-      </div>
-    `;
+    content=`<table class="hist-table">
+      <thead><tr><th>Time</th><th>${S.names[0]}</th><th>${S.names[1]}</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
 
   } else {
-    const pairsHtml=S.playerPairs.map((pair,pidx)=>`
-      <div class="pair-item ${S.currentPairIdx===pidx?'active':''}" onclick="selectPlayerPair(${pidx})">
-        <div class="pair-name">${pair[0]} vs ${pair[1]}</div>
-        <div class="pair-actions">
-          <button class="action-btn" style="flex:1;padding:6px;margin:0;font-size:12px" onclick="event.stopPropagation();(()=>{const n1=prompt('Edit first player:',S.playerPairs[${pidx}][0]);if(n1)updatePlayerPair(${pidx},0,n1)})()">Edit P1</button>
-          <button class="action-btn" style="flex:1;padding:6px;margin:0;font-size:12px" onclick="event.stopPropagation();(()=>{const n2=prompt('Edit second player:',S.playerPairs[${pidx}][1]);if(n2)updatePlayerPair(${pidx},1,n2)})()">Edit P2</button>
-          <button class="action-btn danger" style="flex:1;padding:6px;margin:0;font-size:12px" onclick="event.stopPropagation();deletePlayerPair(${pidx})">Delete</button>
-        </div>
-      </div>
-    `).join('');
-
     content=`
       <div class="opt-section">
-        <div class="opt-label">Select active game</div>
-        <div style="max-height:200px;overflow-y:auto;">
-          ${pairsHtml}
-        </div>
-        <button class="action-btn" onclick="newPlayerPair()" style="margin-top:8px">+ New pair</button>
+        <div class="opt-label">Player names</div>
+        <div class="opt-row"><label>Player 1</label><input id="name-input-0" type="text" value="${S.names[0]}" maxlength="14" placeholder="Player 1" autocomplete="off" autocorrect="off" spellcheck="false"/></div>
+        <div class="opt-row"><label>Player 2</label><input id="name-input-1" type="text" value="${S.names[1]}" maxlength="14" placeholder="Player 2" autocomplete="off" autocorrect="off" spellcheck="false"/></div>
       </div>
       <div class="opt-section">
         <div class="opt-label">Game settings</div>
@@ -700,6 +468,7 @@ function render(){
   }
 
   document.getElementById('app').innerHTML=`<div class="tab-content">${content}</div><div class="tabbar">${tabbar}</div>`;
+  if(S.tab===2)initNameInputs();
 }
 
 load();render();
