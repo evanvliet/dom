@@ -8,8 +8,17 @@ a game has the stages:
 = start
 click on highest double player, other one will go first after next domino, then alternate after subsequent dominoes
 erase message after click
+if it was a double five, that player also scores 2, but scorer must enter after.
 
 = play
+enter score and click player that made it. add score to player total, and clear score entry field
+if user goes out ("dominoes"):
+  add hand scores to current game
+  if score is > 50, enter end stage
+  else
+  display "that was a 3 2 hand for peter"
+  clear hang totals for next hand
+
 = end
 
 
@@ -18,6 +27,7 @@ all messages should be in the same place, and not pop up in the middle of the sc
 put them in a status field at the bottom of the screen
 leave blank until needed, then show the message there for 30 seconds, then clear it again
 add ok button to clear the message immediately, make it a help button if no message is showing
+all four tabs should be visible at all times
 
 expect:
 start on options page until player names are entered
@@ -28,5 +38,5 @@ Score:
 keep same border around players
 only show total score in player box
 show numpad always
-bottom row of numpad is <backspace, 0, <domino>
+bottom row of numpad is <backspace, 0, <domino icon, no text> all buttons should be same size
 

@@ -55,11 +55,11 @@ html,body{height:100%;background:var(--color-background-tertiary);font-family:va
 .key{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);font-size:22px;font-weight:400;color:var(--color-text-primary);padding:14px 0;text-align:center;cursor:pointer;user-select:none;transition:background 0.1s,transform 0.08s;}
 .key:active{background:var(--color-border-tertiary);transform:scale(0.95);}
 .key.del{font-size:16px;color:var(--color-text-secondary);}
-.domino-btn{width:100%;margin-top:7px;background:#1D9E75;color:#fff;border:none;border-radius:var(--border-radius-md);padding:13px 0;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:600;transition:background 0.15s,transform 0.1s;}
-.domino-btn:active{background:#0F6E56;transform:scale(0.98);}
-.domino-btn.gameover{background:#D85A30;}
-.domino-btn.gameover:active{background:#b04020;}
-.domino-btn.disabled{background:var(--color-background-secondary);color:var(--color-text-tertiary);pointer-events:none;}
+.key.disabled{background:var(--color-background-secondary);color:var(--color-text-tertiary);cursor:default;}
+.status-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 12px;margin:10px 0;min-height:48px;}
+.status-text{font-size:13px;color:var(--color-text-primary);line-height:1.4;flex:1;min-height:1.2em;}
+.status-text.empty{color:transparent;}
+.domino-icon{width:34px;height:24px;transform:rotate(90deg);display:block;}
 
 /* scorecards */
 .scoreboard{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
@@ -121,14 +121,17 @@ const S={
   target:50,
   gameOver:false,
   tab:0,
-  phase:'setup',
+  phase:'start',
   firstPlayer:-1,
   handFirstPlayer:-1,
   handNum:0,
   firstPlayerHighlightUntil:0,
   lastAdded:['',''],
   pendingWin:false,
-  editingIdx:-1
+  editingIdx:-1,
+  status:'',
+  statusUntil:0,
+  highestDoublePlayer:-1
 };
 
 function load(){
@@ -142,13 +145,18 @@ function load(){
     S.records=d.records||[];
     S.target=d.target!=null?d.target:50;
     S.gameOver=!!d.gameOver;
-    S.tab=d.tab||0;
-    S.phase=d.phase||'setup';
+    if(d.tab!=null){S.tab=d.tab;} else {
+      S.tab=(S.names[0].startsWith('Player')&&S.names[1].startsWith('Player'))?3:0;
+    }
+    S.phase=d.phase||'start';
     S.firstPlayer=d.firstPlayer!=null?d.firstPlayer:-1;
     S.handFirstPlayer=d.handFirstPlayer!=null?d.handFirstPlayer:-1;
     S.handNum=d.handNum||0;
     S.lastAdded=d.lastAdded||['',''];
     S.pendingWin=!!d.pendingWin;
+    S.status=d.status||'';
+    S.statusUntil=d.statusUntil||0;
+    S.highestDoublePlayer=d.highestDoublePlayer!=null?d.highestDoublePlayer:-1;
     S.display='';S.editingIdx=-1;
   }catch(e){}
 }
@@ -160,7 +168,8 @@ function save(){
       records:S.records,target:S.target,gameOver:S.gameOver,
       tab:S.tab,phase:S.phase,firstPlayer:S.firstPlayer,
       handFirstPlayer:S.handFirstPlayer,handNum:S.handNum,
-      lastAdded:S.lastAdded,pendingWin:S.pendingWin
+      lastAdded:S.lastAdded,pendingWin:S.pendingWin,
+      status:S.status,statusUntil:S.statusUntil,highestDoublePlayer:S.highestDoublePlayer
     }));
   }catch(e){}
 }
@@ -168,19 +177,37 @@ function save(){
 function ts(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
 
 function domTile(){
-  return `<svg width="34" height="22" viewBox="0 0 34 22" style="flex-shrink:0">
-    <rect x="1" y="1" width="32" height="20" rx="4" fill="#111" stroke="#fff" stroke-width="1.5"/>
-    <line x1="17" y1="3" x2="17" y2="19" stroke="#fff" stroke-width="1"/>
-    <circle cx="9" cy="7" r="2" fill="#fff"/>
-    <circle cx="9" cy="15" r="2" fill="#fff"/>
-    <circle cx="25" cy="6" r="2" fill="#fff"/>
-    <circle cx="25" cy="11" r="2" fill="#fff"/>
-    <circle cx="25" cy="16" r="2" fill="#fff"/>
-  </svg>`;
+  return `<img src="domino.svg" class="domino-icon" alt="Domino icon"/>`;
+}
+
+function setStatus(msg,timeout=30000){
+  S.status=msg;S.statusUntil=Date.now()+timeout;save();render();
+}
+
+function clearStatus(){
+  S.status='';S.statusUntil=0;save();render();
+}
+
+function showHelp(){
+  const help=S.phase==='start'
+    ? 'Tap the player with the highest double to set the opening order. The other player will start the first hand. Enter opening points first if needed.'
+    : S.phase==='play'
+      ? 'Enter points for each player and tap the domino icon when a hand ends. The next hand alternates starter automatically.'
+      : 'Game finished. Tap New to start a fresh game.';
+  alert(help);
+}
+
+function resetForNewGame(){
+  S.scores=[0,0];S.handScores=[0,0];S.display='';S.records=[];
+  S.gameOver=false;S.pendingWin=false;S.phase='start';
+  S.firstPlayer=-1;S.handFirstPlayer=-1;S.handNum=0;
+  S.firstPlayerHighlightUntil=0;S.lastAdded=['',''];S.editingIdx=-1;
+  S.status='';S.statusUntil=0;S.highestDoublePlayer=-1;S.tab=0;
+  save();render();
 }
 
 function pressKey(v){
-  if(S.gameOver||S.phase==='setup')return;
+  if(S.gameOver||S.phase==='end')return;
   if(S.display.length>=3)return;
   S.display+=v;
   const el=document.getElementById('display-bar');
@@ -195,9 +222,13 @@ function delKey(){
 
 function tapPlayer(i){
   if(S.gameOver)return;
-  if(S.phase==='setup'){
-    const pts=parseInt(S.display)||0;
-    S.firstPlayer=i;S.handFirstPlayer=i;S.handNum=1;
+  const pts=parseInt(S.display)||0;
+  if(S.phase==='start'){
+    const starter=1-i;
+    S.highestDoublePlayer=i;
+    S.firstPlayer=starter;
+    S.handFirstPlayer=starter;
+    S.handNum=1;
     if(pts>0){
       S.scores[i]+=pts;S.handScores[i]+=pts;
       S.lastAdded=['',''];S.lastAdded[i]='+'+pts;
@@ -205,9 +236,9 @@ function tapPlayer(i){
       if(S.scores[i]>=S.target)S.pendingWin=true;
     }
     S.display='';S.phase='play';
+    setStatus(`${S.names[starter]} will start hand 1. Enter scores and tap the domino icon after each hand.`);
     save();render();return;
   }
-  const pts=parseInt(S.display)||0;
   if(pts<=0){
     S.display='';
     const el=document.getElementById('display-bar');
@@ -223,7 +254,14 @@ function tapPlayer(i){
 }
 
 function callDomino(){
-  if(S.phase!=='play'||S.gameOver)return;
+  if(S.phase==='end'){
+    resetForNewGame();
+    return;
+  }
+  if(S.phase!=='play'||S.gameOver){
+    setStatus('Select the highest double player first to begin.');
+    return;
+  }
   const gameEnds=S.pendingWin;
   S.records.push({
     who:-1,pts:0,time:ts(),type:'domino',hand:S.handNum,
@@ -235,18 +273,15 @@ function callDomino(){
     const wi=S.scores[0]>=S.target?0:1;
     S.records.push({who:-1,pts:0,time:ts(),type:'gameover',
       finalScores:[S.scores[0],S.scores[1]],winnerIdx:wi,winnerName:S.names[wi]});
-    S.scores=[0,0];S.handScores=[0,0];S.pendingWin=false;
-    S.handFirstPlayer=S.handFirstPlayer===0?1:0;
-    S.firstPlayer=S.handFirstPlayer;S.handNum++;
-    S.lastAdded=['',''];S.display='';
-    S.firstPlayerHighlightUntil=Date.now()+10000;
-    setTimeout(()=>{if(Date.now()>=S.firstPlayerHighlightUntil){S.firstPlayerHighlightUntil=0;render();}},10000);
+    S.gameOver=true;S.phase='end';
+    setStatus(`${S.names[wi]} wins with ${S.scores[wi]} points. Tap New to start a fresh game.`);
     save();render();return;
   }
   S.handScores=[0,0];S.lastAdded=['',''];S.pendingWin=false;
   S.handFirstPlayer=S.handFirstPlayer===0?1:0;
   S.firstPlayer=S.handFirstPlayer;S.handNum++;
   S.firstPlayerHighlightUntil=Date.now()+10000;
+  setStatus(`Hand ${S.handNum} begins. ${S.names[S.firstPlayer]} starts again.`);
   setTimeout(()=>{if(Date.now()>=S.firstPlayerHighlightUntil){S.firstPlayerHighlightUntil=0;render();}},10000);
   S.display='';save();render();
 }
@@ -332,7 +367,7 @@ function doImport(){
     if(!d.records||!d.names){alert('Invalid data');return;}
     S.names=d.names;S.scores=d.scores||[0,0];S.handScores=d.handScores||[0,0];
     S.records=d.records;S.target=d.target!=null?d.target:50;
-    S.phase=d.phase||'play';S.firstPlayer=d.firstPlayer!=null?d.firstPlayer:-1;
+    S.phase=d.phase||'start';S.firstPlayer=d.firstPlayer!=null?d.firstPlayer:-1;
     S.handFirstPlayer=d.handFirstPlayer!=null?d.handFirstPlayer:-1;
     S.handNum=d.handNum||0;S.display='';S.gameOver=false;S.tab=0;
     S.lastAdded=['',''];S.pendingWin=false;S.editingIdx=-1;
@@ -342,11 +377,7 @@ function doImport(){
 
 function newGame(){
   if(!confirm('Reset everything and start a new game?'))return;
-  S.scores=[0,0];S.handScores=[0,0];S.display='';S.records=[];
-  S.gameOver=false;S.pendingWin=false;S.phase='setup';
-  S.firstPlayer=-1;S.handFirstPlayer=-1;
-  S.handNum=0;S.firstPlayerHighlightUntil=0;S.lastAdded=['',''];S.editingIdx=-1;S.tab=0;
-  save();render();
+  resetForNewGame();
 }
 
 function initNameInputs(){
@@ -360,80 +391,74 @@ function initNameInputs(){
 function setTab(t){S.editingIdx=-1;S.tab=t;render();}
 
 function render(){
+  if(S.status && Date.now()>S.statusUntil){S.status='';S.statusUntil=0;save();}
   const tabIcons=[
-    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
-    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>`,
-    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M4 12h16"/><path d="M12 4v16"/></svg>`,
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16v12H4z"/><path d="M8 10h8"/><path d="M8 14h8"/></svg>`,
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4a4 4 0 014 4 4 4 0 01-8 0 4 4 0 014-4z"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`,
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>`
   ];
-  const tabNames=['Score','History','Options'];
+  const tabNames=['Score','Game','Stats','Options'];
   const tabbar=tabNames.map((n,i)=>`<div class="tbtab ${S.tab===i?'active':''}" onclick="setTab(${i})">${tabIcons[i]}<span>${n}</span></div>`).join('');
-
+  const statusText=S.status||'';
+  const statusButton=S.status?'OK':'Help';
   let content='';
 
   if(S.tab===0){
-    const isSetup=S.phase==='setup';
-    const dominoDisabled=isSetup||S.gameOver;
-    const btnClass=dominoDisabled?'disabled':S.pendingWin?'gameover':'';
-    const btnLabel=S.pendingWin&&!dominoDisabled?'Game Over':'Domino';
-
+    const isStart=S.phase==='start';
+    const displayClass=S.display?'display-bar':'display-bar dim';
     const firstHighlight=Date.now() < S.firstPlayerHighlightUntil;
     const cards=[0,1].map(i=>`
-      <div class="scard ${isSetup?'pending-setup':firstHighlight&&S.firstPlayer===i?'goes-first':''}" onclick="tapPlayer(${i})">
+      <div class="scard ${isStart?'pending-setup':''} ${firstHighlight&&S.firstPlayer===i?'goes-first':''}" onclick="tapPlayer(${i})">
         <div class="pname">${S.names[i]}</div>
-        <div class="score-pair">
-          <span class="score-hand">${S.handScores[i]}</span>
-          <span class="score-slash">/</span>
-          <span class="score-total">${S.scores[i]}</span>
-        </div>
-        <div class="score-labels">
-          <span class="score-lbl-hand">hand</span>
-          <span class="score-lbl-sep">/</span>
-          <span class="score-lbl-tot">total</span>
-        </div>
+        <div class="score-total">${S.scores[i]}</div>
         <div class="lastadd">${S.lastAdded[i]||''}</div>
       </div>`).join('');
-
+    const dominoLabel=S.phase==='end'?'New':domTile();
     content=`
       <div class="numpad-wrap">
-        <div id="display-bar" class="display-bar${S.display?'':' dim'}">${S.display||'0'}</div>
+        <div id="display-bar" class="${displayClass}">${S.display||'0'}</div>
         <div class="keypad">
           ${[1,2,3,4,5,6,7,8,9].map(n=>`<div class="key" onclick="pressKey('${n}')">${n}</div>`).join('')}
           <div class="key del" onclick="delKey()">&#9003;</div>
           <div class="key" onclick="pressKey('0')">0</div>
-          <div class="key" style="background:var(--color-background-secondary);"></div>
+          <div class="key ${S.phase!=='play'&&S.phase!=='end'?'disabled':''}" onclick="callDomino()">${dominoLabel}</div>
         </div>
-        <button class="domino-btn ${btnClass}" onclick="callDomino()">
-          ${domTile()} ${btnLabel}
-        </button>
       </div>
-      ${isSetup?`<div class="setup-hint">Tap the player who goes first.<br>Enter their opening score first if they score on the opening play.</div>`:''}
+      ${isStart?`<div class="setup-hint">Tap the highest double player to begin. The other player starts the first hand. Enter opening points first if they scored on the opening play.</div>`:''}
       <div class="scoreboard">${cards}</div>
     `;
-
   } else if(S.tab===1){
-    const dominoIndices=[];
-    for(let i=0;i<S.records.length;i++){
-      if(S.records[i].type==='domino')dominoIndices.push(i);
-    }
-    const rows=dominoIndices.length===0
-      ?`<tr><td colspan="4" style="text-align:center;color:var(--color-text-tertiary);padding:24px 0">No domino history yet</td></tr>`
-      :dominoIndices.slice().reverse().map(idx=>{
-          const rec=S.records[idx];
-          const leftGain=(rec.handTotals&&rec.handTotals[0]!=null)?rec.handTotals[0]:0;
-          const rightGain=(rec.handTotals&&rec.handTotals[1]!=null)?rec.handTotals[1]:0;
-          return `<tr class="domino-row">
-            <td style="font-size:10px;white-space:nowrap">${rec.time}</td>
-            <td>${rec.totalAfter[0]} (${leftGain})</td>
-            <td>${rec.totalAfter[1]} (${rightGain})</td>
-            <td><button class="del-btn" onclick="deleteRecord(${idx})">&#10005;</button></td>
-          </tr>`;
-        }).join('');
-
-    content=`<table class="hist-table">
-      <thead><tr><th>Time</th><th>${S.names[0]}</th><th>${S.names[1]}</th><th></th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
-
+    const rows=S.records.map((rec,idx)=>{
+      if(rec.type==='score'){
+        return `<tr><td style="font-size:10px;white-space:nowrap">${rec.time}</td><td colspan="2">${S.names[rec.who]} scored +${rec.pts}</td><td><button class="del-btn" onclick="deleteRecord(${idx})">&#10005;</button></td></tr>`;
+      }
+      if(rec.type==='domino'){
+        return `<tr class="domino-row"><td style="font-size:10px;white-space:nowrap">${rec.time}</td><td colspan="2">Hand ${rec.hand} ended</td><td><button class="del-btn" onclick="deleteRecord(${idx})">&#10005;</button></td></tr>`;
+      }
+      return `<tr class="gameover-row"><td style="font-size:10px;white-space:nowrap">${rec.time}</td><td colspan="2">${rec.winnerName} won ${rec.finalScores[0]}–${rec.finalScores[1]}</td><td><button class="del-btn" onclick="deleteRecord(${idx})">&#10005;</button></td></tr>`;
+    }).reverse().join('');
+    content=`<table class="hist-table"><thead><tr><th>Time</th><th colspan="2">Event</th><th></th></tr></thead><tbody>${rows||`<tr><td colspan="4" style="text-align:center;color:var(--color-text-tertiary);padding:24px 0">No game history yet</td></tr>`}</tbody></table>`;
+  } else if(S.tab===2){
+    const completedGames=S.records.filter(r=>r.type==='gameover');
+    const wins=[0,0];
+    completedGames.forEach(g=>{if(g.winnerIdx!=null)wins[g.winnerIdx]++;});
+    const handCount=S.records.filter(r=>r.type==='domino').length;
+    content=`
+      <div class="opt-section">
+        <div class="opt-label">Stats</div>
+        <div class="opt-row"><label>Completed games</label><div>${completedGames.length}</div></div>
+        <div class="opt-row"><label>${S.names[0]} wins</label><div>${wins[0]}</div></div>
+        <div class="opt-row"><label>${S.names[1]} wins</label><div>${wins[1]}</div></div>
+        <div class="opt-row"><label>Hands played</label><div>${handCount}</div></div>
+      </div>
+      <div class="opt-section">
+        <div class="opt-label">Current game</div>
+        <div class="opt-row"><label>Target</label><div>${S.target}</div></div>
+        <div class="opt-row"><label>Current phase</label><div>${S.phase==='start'?'Start':S.phase==='play'?'Play':'End'}</div></div>
+        <div class="opt-row"><label>Next starter</label><div>${S.phase==='end'?'–':S.firstPlayer>=0?S.names[S.firstPlayer]:'Not set'}</div></div>
+      </div>
+    `;
   } else {
     content=`
       <div class="opt-section">
@@ -467,8 +492,9 @@ function render(){
     `;
   }
 
-  document.getElementById('app').innerHTML=`<div class="tab-content">${content}</div><div class="tabbar">${tabbar}</div>`;
-  if(S.tab===2)initNameInputs();
+  const statusHtml=`<div class="status-bar"><div class="status-text ${statusText?'':'empty'}">${statusText||' '}</div><button class="action-btn" style="width:auto;min-width:80px;padding:8px 12px;" onclick="${statusText?'clearStatus()':'showHelp()'}">${statusButton}</button></div>`;
+  document.getElementById('app').innerHTML=`<div class="tab-content">${content}${statusHtml}</div><div class="tabbar">${tabbar}</div>`;
+  if(S.tab===3)initNameInputs();
 }
 
 load();render();
